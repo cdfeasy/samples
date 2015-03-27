@@ -1,0 +1,39 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+    <bean name="config" class="java.lang.String">
+        <constructor-arg>
+            <value>akka {
+                actor.provider = "akka.cluster.ClusterActorRefProvider"
+                remote.netty.tcp {
+                hostname = "127.0.0.1"
+                port = "20201"
+                }
+                actor {
+                serializers {
+                java = "akka.serialization.JavaSerializer"
+                }
+                serialization-bindings {
+                "java.lang.String" = java
+                "java.lang.Boolean" = java
+                "main.messages.Count" = java
+                "main.messages.Get" = java
+                "java.lang.Integer" = java
+                }
+                }
+                cluster.seed-nodes = ["akka.tcp://ClusterSystem@127.0.0.1:20201"]
+                cluster.roles = [master]
+                }
+            </value>
+        </constructor-arg>
+    </bean>
+    <bean id="App" class="sample.AppConfiguration"/>
+    <bean id="ActorSystem" factory-bean="App" factory-method="actorSystem" class="akka.actor.ActorSystem" autowire-candidate="true">
+        <constructor-arg type="java.lang.String" ref="config" />
+    </bean>
+
+</beans>
