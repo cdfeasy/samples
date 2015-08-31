@@ -40,7 +40,7 @@ public class KafkaListenerConsumer {
             props.put("auto.offset.reset", "smallest");
         }
         // props.put("partitioner.class", "example.producer.SimplePartitioner");
-        props.put("request.required.acks", "1");
+        props.put("request.required.acks", "0");
         topic = topicName;
         this.received = received;
         consumerConfig = new ConsumerConfig(props);
