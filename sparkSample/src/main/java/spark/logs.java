@@ -22,7 +22,7 @@ public class logs {
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount").setMaster("local[100]");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
-        sc.textFile()
+     //   sc.textFile()
 //        JavaRDD<String> lines = sc.textFile("c:/tmp/big.txt",1);
 //        JavaRDD<String> words = lines.flatMap(s-> Arrays.asList(SPACE.split(s)));
 //        JavaPairRDD<String, Integer> ones = words.mapToPair(s->new Tuple2<String, Integer>(s,1));
