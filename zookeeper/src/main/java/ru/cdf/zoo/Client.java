@@ -1,4 +1,4 @@
-package zoo;
+package ru.cdf.zoo;
 
 
 import org.apache.curator.RetryPolicy;

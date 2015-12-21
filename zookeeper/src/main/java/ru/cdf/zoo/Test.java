@@ -1,4 +1,4 @@
-package zoo;
+package ru.cdf.zoo;
 
 /**
  * Created by d.asadullin on 20.10.2015.

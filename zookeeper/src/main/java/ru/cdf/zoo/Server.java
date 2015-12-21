@@ -1,4 +1,4 @@
-package zoo;
+package ru.cdf.zoo;
 
 import org.apache.zookeeper.server.ServerConfig;
 import org.apache.zookeeper.server.ZooKeeperServerMain;
