@@ -1,6 +1,7 @@
 package ru.cdf.zoo.client;
 
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.data.Stat;
 import ru.cdf.zoo.listener.ZooListener;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ public interface ZooClient {
     void removeListener(ZooListener listener);
     List<String> getChildren(String path) throws Exception;
     byte[] getData(String path) throws Exception;
+    Stat getStat(String path) throws Exception;
     void createNode(String path,byte[] data,CreateMode mode,boolean createParentsIfNeeded) throws Exception;
     void setData(String path,byte[] data) throws Exception;
     void deleteNode(String path,boolean deleteChildrenIfNeeded) throws Exception;

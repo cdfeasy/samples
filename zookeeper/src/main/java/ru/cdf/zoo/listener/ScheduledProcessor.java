@@ -1,6 +1,7 @@
 package ru.cdf.zoo.listener;
 
 import org.apache.curator.framework.CuratorFramework;
+import ru.cdf.zoo.ZPath;
 import ru.cdf.zoo.client.ZooClient;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
     private ZooClient client;
     private ScheduledExecutorService executorService;
     private Integer timeOut;
-    private Map<>
+    private ZPath root;
     public ScheduledProcessor(ZooClient client,Integer timeOut){
         this.client=client;
         this.timeOut=timeOut;
@@ -23,7 +24,7 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
 
     @Override
     public void start() throws Exception {
-
+        root=ZPath.getZPath(client,"/",null);
     }
 
     @Override
@@ -34,7 +35,7 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
     private class CheckListeners implements Runnable{
         @Override
         public void run() {
-            for(String path:)
+
         }
     }
 

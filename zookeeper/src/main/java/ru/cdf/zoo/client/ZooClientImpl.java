@@ -4,6 +4,7 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import ru.cdf.zoo.listener.ListenerProcessor;
 import ru.cdf.zoo.listener.ListenerType;
@@ -69,7 +70,14 @@ public class ZooClientImpl implements ZooClient {
 
     @Override
     public byte[] getData(String path) throws Exception {
+     //   Stat stat = client.checkExists().forPath(path);
+     //   System.out.println(stat);
         return client.getData().forPath(path);
+    }
+
+    @Override
+    public Stat getStat(String path) throws Exception {
+        return  client.checkExists().forPath(path);
     }
 
     @Override

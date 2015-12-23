@@ -1,5 +1,6 @@
 import org.apache.zookeeper.CreateMode;
 import org.junit.Test;
+import ru.cdf.zoo.ZPath;
 import ru.cdf.zoo.client.ZooClient;
 import ru.cdf.zoo.ZooClientBuilder;
 import ru.cdf.zoo.ZooEvent;
@@ -15,11 +16,13 @@ public class TestClient {
         client.start();
         Thread.sleep(1000);
         client.createNode("/a/b", new byte[]{}, CreateMode.PERSISTENT, true);
+        client.getData("/a/b");
 
         System.out.println("reg");
        //client.registerListener("/a/b",null);
         System.out.println("createNode");
         client.createNode("/a/b/c",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.getData("/a/b");
       //  Thread.sleep(1000);
         System.out.println("setData");
         client.registerListener("/a/b", new ZooListener() {
@@ -48,13 +51,21 @@ public class TestClient {
             }
         });
         client.setData("/a/b", new byte[]{1});
+        client.getData("/a/b");
        // Thread.sleep(1000);
         System.out.println("setData1");
         client.setData("/a/b/c", new byte[]{1, 2, 3});
+        client.getData("/a/b");
         //Thread.sleep(1000);
         System.out.println("deleteNode");
+        ZPath path=ZPath.getZPath(client,"/",null);
+        System.out.println(path.toTree());
+        System.out.println(path.findZpath("/a/b/c"));
         client.deleteNode("/a/b/c",true);
-        Thread.sleep(3000);
+
+
+
+        Thread.sleep(300000);
         client.stop();
     }
 }
