@@ -6,10 +6,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
-import ru.cdf.zoo.listener.ListenerProcessor;
-import ru.cdf.zoo.listener.ListenerType;
-import ru.cdf.zoo.listener.RealTimeProcessor;
-import ru.cdf.zoo.listener.ZooListener;
+import ru.cdf.zoo.listener.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +33,7 @@ public class ZooClientImpl implements ZooClient {
         if(ListenerType.RealTime.equals(listenerType)){
             processor=new RealTimeProcessor(client);
         }else{
-
+            processor=new ScheduledProcessor(this,listenerTime);
         }
     }
 

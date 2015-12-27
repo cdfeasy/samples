@@ -1,9 +1,11 @@
 package ru.cdf.zoo;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.apache.zookeeper.data.Stat;
 import ru.cdf.zoo.client.ZooClient;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by dmitry on 20.12.2015.
@@ -12,8 +14,9 @@ public class ZPath {
     private String name;
     private String fullPath;
     private ZPath parent;
-    private ZPath[] children;
+    private List<ZPath> children;
     private long version;
+    private long time;
 
     public ZPath(String name, String fullPath, ZPath parent) {
         this.name = name;
@@ -36,15 +39,21 @@ public class ZPath {
         String[] parts = path.split("/");
         String name=parts.length>=1?parts[parts.length-1]:"";
         Stat stat=client.getStat(path);
+        if(stat==null){
+            return null;
+        }
         ZPath cur = new ZPath(name,path,parent);
         cur.version=stat.getVersion();
-        List<String> children=client.getChildren(path);
-        ZPath[] ch=new ZPath[children.size()];
-        int i=0;
-        for(String s:children){
-            ZPath child=getZPath(client,(path.length()>1?path+"/"+s:"/"+s),cur);
-            ch[i]=child;
-            i++;
+        cur.time=stat.getMtime();
+        List<ZPath> ch = new ArrayList<>(stat.getNumChildren());
+        if(stat.getNumChildren()>0) {
+            List<String> children = client.getChildren(path);
+            for (String s : children) {
+                ZPath child = getZPath(client, (path.length() > 1 ? path + "/" + s : "/" + s), cur);
+                if (child != null) {
+                    ch.add(child);
+                }
+            }
         }
         cur.children=ch;
         return cur;
@@ -72,6 +81,39 @@ public class ZPath {
         }
         return null;
     }
+    public static Map<String,ZPath> toFlatMap(ZPath path){
+        List<ZPath> list=new ArrayList<>();
+        if(path==null){
+            return new HashMap<>();
+        }
+        list.add(path);
+        int cur=0;
+        int newCur=1;
+        while (true){
+            newCur=list.size();
+            for(int i=cur;i<newCur;i++) {
+                addAllChildrens(list,list.get(i));
+            }
+            if(list.size()==newCur){
+                break;
+            }
+            cur=newCur;
+        }
+        Collections.sort(list, new Comparator<ZPath>() {
+            @Override
+            public int compare(ZPath o1, ZPath o2) {
+                return o1.getFullPath().compareTo(o2.getFullPath());
+            }
+        });
+        Map<String,ZPath> map=new TreeMap<>();
+        list.forEach((zpath)->map.put(zpath.getFullPath(),zpath));
+        return map;
+    }
+    private static void addAllChildrens(List<ZPath> list,ZPath p){
+        if(p.children!=null){
+            list.addAll(p.getChildren());
+        }
+    }
 
     public String getName() {
         return name;
@@ -85,12 +127,16 @@ public class ZPath {
         return parent;
     }
 
-    public ZPath[] getChildren() {
+    public List<ZPath> getChildren() {
         return children;
     }
 
     public long getVersion() {
         return version;
+    }
+
+    public long getTime() {
+        return time;
     }
 
     @Override
@@ -100,7 +146,7 @@ public class ZPath {
                 ", fullPath='" + fullPath + '\'' +
                 ", parent=" + parent +
                 ", version=" + version +
-                ", children count[" + (children!=null?children.length:0) +"]"+
+                ", children count[" + (children!=null?children.size():0) +"]"+
                 '}';
     }
 

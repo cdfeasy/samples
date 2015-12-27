@@ -4,7 +4,11 @@ import ru.cdf.zoo.ZPath;
 import ru.cdf.zoo.client.ZooClient;
 import ru.cdf.zoo.ZooClientBuilder;
 import ru.cdf.zoo.ZooEvent;
+import ru.cdf.zoo.listener.ListenerType;
 import ru.cdf.zoo.listener.ZooListener;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by d.asadullin on 24.11.2015.
@@ -39,12 +43,6 @@ public class TestClient {
             }
 
             @Override
-            public boolean onChildChanged(String path, byte[] data, ZooEvent type) {
-                System.out.println("LIST:CHILD:CHANGED"+path+"/"+type.name());
-                return false;
-            }
-
-            @Override
             public boolean onChange(String path,byte[] data, ZooEvent type) {
                 System.out.println("LIST:CHANGED"+"/"+path+"/"+type.name());
                 return false;
@@ -61,11 +59,56 @@ public class TestClient {
         ZPath path=ZPath.getZPath(client,"/",null);
         System.out.println(path.toTree());
         System.out.println(path.findZpath("/a/b/c"));
+
+
+
+
         client.deleteNode("/a/b/c",true);
 
-
-
-        Thread.sleep(300000);
+        Thread.sleep(3000);
         client.stop();
+    }
+
+    @Test
+    public void test1() throws Exception {
+        ZooClient client=new ZooClientBuilder().build();
+        client.start();
+        client.createNode("/a/b", new byte[]{}, CreateMode.PERSISTENT, true);
+        System.out.println(client.getStat("/a"));
+        Thread.sleep(1000);
+        System.out.println(client.getStat("/c/d"));
+        client.stop();
+
+    }
+
+    @Test
+    public void test2() throws Exception {
+        ZooClient client=new ZooClientBuilder().setListenerTime(10).setListenerType(ListenerType.Scheduled).build();
+        client.start();
+        TimeUnit.SECONDS.sleep(1);
+        client.registerListener("/a",new TestListener());
+        client.createNode("/a/d",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a1",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a2",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a3",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a4",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a5",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a5/b1",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a5/b2",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a5/b3",new byte[]{}, CreateMode.PERSISTENT,true);
+        client.createNode("/a/d/a5/b4",new byte[]{}, CreateMode.PERSISTENT,true);
+
+        TimeUnit.SECONDS.sleep(10);
+        System.out.println("delete");
+        client.deleteNode("/a/d/a5", true);
+        client.setData("/a","blabla".getBytes());
+        TimeUnit.SECONDS.sleep(20);
+//        ZPath pp=ZPath.getZPath(client,"/a",null);
+//        for(Map.Entry<String,ZPath> pc:ZPath.toFlatMap(pp).entrySet()) {
+//            System.out.println(pc.getKey()+"/"+pc.getValue().getFullPath());
+//        }
+        client.stop();
+
     }
 }
