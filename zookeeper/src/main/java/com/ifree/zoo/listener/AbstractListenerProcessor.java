@@ -38,7 +38,7 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
         for (ZooListener l : listeners) {
             try {
                 if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
-                    l.onCreate(event.getData().getPath(), event.getData().getData(), isNode ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
+                    l.onChange(event.getData().getPath(), event.getData().getData(), isNode ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
                 } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
                     l.onDelete(event.getData().getPath(), isNode ? ZooEvent.NodeDeleted : ZooEvent.NodeChildrenDeleted);
                 } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {

@@ -11,6 +11,8 @@ import com.ifree.zoo.listener.ZooListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by d.asadullin on 24.11.2015.
@@ -27,13 +29,13 @@ public class TestClient {
         client.getData("/a/b");
 
         System.out.println("reg");
-       //client.registerListener("/a/b",null);
+       //client.addListener("/a/b",null);
         System.out.println("createNode");
         client.createNode("/a/b/c",new byte[]{}, CreateMode.PERSISTENT,true);
         client.getData("/a/b");
       //  Thread.sleep(1000);
         System.out.println("setData");
-        client.registerListener("/a/b", new ZooListener() {
+        client.addListener("/a/b", new ZooListener() {
             @Override
             public boolean onDelete(String path, ZooEvent type) {
                 System.out.println("!!!1");
@@ -41,14 +43,8 @@ public class TestClient {
             }
 
             @Override
-            public boolean onCreate(String path,byte[] data, ZooEvent type) {
-                System.out.println("!!!2");
-                return false;
-            }
-
-            @Override
-            public boolean onChange(String path,byte[] data, ZooEvent type) {
-                System.out.println("LIST:CHANGED"+"/"+path+"/"+type.name());
+            public boolean onChange(String path, byte[] data, ZooEvent type) {
+                System.out.println("LIST:CHANGED" + "/" + path + "/" + type.name());
                 return false;
             }
         });
@@ -80,10 +76,13 @@ public class TestClient {
         server.start();
         ZooClient client=new ZooClientBuilder().build();
         client.start();
-        client.createNode("/a/b", new byte[]{}, CreateMode.PERSISTENT, true);
-        System.out.println(client.getStat("/a"));
+        System.out.println(client.createNode("/a/s", new byte[]{}, CreateMode.EPHEMERAL, true));
+        System.out.println(client.createNode("/a/s", new byte[]{}, CreateMode.EPHEMERAL, true));
+        System.out.println(client.createNode("/a/e", new byte[]{}, CreateMode.PERSISTENT_SEQUENTIAL, true));
+        System.out.println(client.createNode("/a/e", new byte[]{}, CreateMode.PERSISTENT_SEQUENTIAL, true));
+        System.out.println(client.createNode("/a/e", new byte[]{}, CreateMode.PERSISTENT_SEQUENTIAL, true));
         Thread.sleep(1000);
-        System.out.println(client.getStat("/c/d"));
+        ((UnaryOperator<Integer>)(a)->++a).apply(2015);
         client.stop();
         server.stop();
 
@@ -115,7 +114,7 @@ public class TestClient {
         client.start();
         System.out.println(client.getData("/b/cv/d"));
         TimeUnit.SECONDS.sleep(1);
-        client.registerListener("/a",new TestListener());
+        client.addListener("/a", new TestListener());
         client.createNode("/a/d",new byte[]{}, CreateMode.PERSISTENT,true);
         client.createNode("/a/d/a",new byte[]{}, CreateMode.PERSISTENT,true);
         client.createNode("/a/d/a1",new byte[]{}, CreateMode.PERSISTENT,true);

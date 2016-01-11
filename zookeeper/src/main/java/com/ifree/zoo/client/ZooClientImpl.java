@@ -29,7 +29,7 @@ public class ZooClientImpl implements ZooClient {
         this.retryPolicy = retryPolicy;
         this.listenerType = listenerType;
         this.listenerTime = listenerTime;
-        client = CuratorFrameworkFactory.newClient("localhost:2181", retryPolicy);
+        client = CuratorFrameworkFactory.newClient(url, retryPolicy);
         if(ListenerType.RealTime.equals(listenerType)){
             processor=new RealTimeProcessor(client);
         }else{
@@ -51,7 +51,7 @@ public class ZooClientImpl implements ZooClient {
     }
 
     @Override
-    public void registerListener(String path, ZooListener listener) {
+    public void addListener(String path, ZooListener listener) {
         processor.registerListener(path,listener);
     }
 
@@ -64,6 +64,11 @@ public class ZooClientImpl implements ZooClient {
     public List<String> getChildren(String path) throws Exception {
         List<String> strings = client.getChildren().forPath(path);
         return strings;
+    }
+
+    @Override
+    public ZooSerializer getSerializer() {
+        return serializer;
     }
 
     @Override
@@ -90,22 +95,26 @@ public class ZooClientImpl implements ZooClient {
     }
 
     @Override
-    public void createNode(String path, byte[] data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
-        Stat stat = client.checkExists().forPath(path);
-        if(stat!=null){
-            setData(path,data);
-            return;
+    public String createNode(String path, byte[] data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
+        String res=path;
+        if(!CreateMode.EPHEMERAL_SEQUENTIAL.equals(path)&&!CreateMode.PERSISTENT_SEQUENTIAL.equals(mode)) {
+            Stat stat = client.checkExists().forPath(path);
+            if (stat != null) {
+                setData(path, data);
+                return res;
+            }
         }
         if(createParentsIfNeeded) {
-            client.create().creatingParentsIfNeeded().withMode(mode).forPath(path,data);
+            res=client.create().creatingParentsIfNeeded().withMode(mode).forPath(path,data);
         } else{
-            client.create().withMode(mode).forPath(path,data);
+            res=client.create().withMode(mode).forPath(path,data);
         }
+        return res;
     }
 
     @Override
-    public <T> void createNode(String path, T data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
-        createNode(path,serializer.getBytes(data),mode,createParentsIfNeeded);
+    public <T> String createNode(String path, T data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
+        return createNode(path,serializer.getBytes(data),mode,createParentsIfNeeded);
     }
 
     @Override

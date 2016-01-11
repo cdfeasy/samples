@@ -7,6 +7,5 @@ import com.ifree.zoo.ZooEvent;
  */
 public interface ZooListener {
     boolean onDelete(String path,ZooEvent type);
-    boolean onCreate(String path,byte[] data,ZooEvent type);
     boolean onChange(String path,byte[] data,ZooEvent type);
 }

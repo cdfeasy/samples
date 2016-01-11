@@ -12,11 +12,6 @@ public class TestListener implements ZooListener {
     }
 
     @Override
-    public boolean onCreate(String path, byte[] data, ZooEvent type) {
-        System.out.println(type.name()+"/"+path);
-        return false;
-    }
-    @Override
     public boolean onChange(String path, byte[] data, ZooEvent type) {
         System.out.println(type.name()+"/"+path);
         return false;

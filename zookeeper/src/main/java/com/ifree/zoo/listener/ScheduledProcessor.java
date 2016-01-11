@@ -106,7 +106,7 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
                 @Override
                 public void accept(ZooListener zooListener) {
                     try {
-                        zooListener.onCreate(newValue.getFullPath(), data, isRoot ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
+                        zooListener.onChange(newValue.getFullPath(), data, isRoot ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
                     } catch (Exception ex) {
                         logger.error("Listener exception", ex);
                     }
