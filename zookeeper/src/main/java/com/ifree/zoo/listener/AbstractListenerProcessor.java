@@ -1,10 +1,10 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.cdf.zoo.ZPath;
-import ru.cdf.zoo.ZooEvent;
+import com.ifree.zoo.ZPath;
+import com.ifree.zoo.ZooEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +70,13 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
                 logger.error("cannot init listener", e);
             }
         }
+    }
+
+    @Override
+    public void removeListener(ZooListener listener) {
+        intListeners.forEach((a, b) -> {
+            if (b.contains(listener)) b.remove(listener);
+        });
     }
 
     protected void initListener(String path) throws Exception {

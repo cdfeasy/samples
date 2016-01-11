@@ -1,12 +1,14 @@
 import org.apache.zookeeper.CreateMode;
 import org.junit.Test;
-import ru.cdf.zoo.ZPath;
-import ru.cdf.zoo.client.ZooClient;
-import ru.cdf.zoo.ZooClientBuilder;
-import ru.cdf.zoo.ZooEvent;
-import ru.cdf.zoo.listener.ListenerType;
-import ru.cdf.zoo.listener.ZooListener;
+import com.ifree.zoo.Server;
+import com.ifree.zoo.ZPath;
+import com.ifree.zoo.client.ZooClient;
+import com.ifree.zoo.ZooClientBuilder;
+import com.ifree.zoo.ZooEvent;
+import com.ifree.zoo.listener.ListenerType;
+import com.ifree.zoo.listener.ZooListener;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class TestClient {
     @Test
     public void test() throws Exception {
+        Server server=new Server();
+        server.start();
         ZooClient client=new ZooClientBuilder().build();
         client.start();
         Thread.sleep(1000);
@@ -67,10 +71,13 @@ public class TestClient {
 
         Thread.sleep(3000);
         client.stop();
+        server.stop();
     }
 
     @Test
     public void test1() throws Exception {
+        Server server=new Server();
+        server.start();
         ZooClient client=new ZooClientBuilder().build();
         client.start();
         client.createNode("/a/b", new byte[]{}, CreateMode.PERSISTENT, true);
@@ -78,13 +85,35 @@ public class TestClient {
         Thread.sleep(1000);
         System.out.println(client.getStat("/c/d"));
         client.stop();
+        server.stop();
+
+    }
+
+    @Test
+    public void testString() throws Exception {
+        Server server=new Server();
+        server.start();
+        Map<String,String> mp=new HashMap<>();
+        mp.put("sfdg,df","sfdgfdg==");
+        mp.put("sdfgdfd232","sd33=-==1,");
+        ZooClient client=new ZooClientBuilder().build();
+        client.start();
+        client.createNode("/b/c/d",new byte[]{},CreateMode.PERSISTENT,true);
+        client.setObject("/b/c/d", mp);
+        Map newMap=client.getObject("/b/c/d", mp.getClass());
+        System.out.println(newMap);
+        server.stop();
+      //  System.out.println(s.next());
 
     }
 
     @Test
     public void test2() throws Exception {
+        Server server=new Server();
+        server.start();
         ZooClient client=new ZooClientBuilder().setListenerTime(10).setListenerType(ListenerType.Scheduled).build();
         client.start();
+        System.out.println(client.getData("/b/cv/d"));
         TimeUnit.SECONDS.sleep(1);
         client.registerListener("/a",new TestListener());
         client.createNode("/a/d",new byte[]{}, CreateMode.PERSISTENT,true);
@@ -109,6 +138,7 @@ public class TestClient {
 //            System.out.println(pc.getKey()+"/"+pc.getValue().getFullPath());
 //        }
         client.stop();
+        server.stop();
 
     }
 }

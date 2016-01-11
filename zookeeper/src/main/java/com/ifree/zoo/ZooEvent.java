@@ -1,4 +1,4 @@
-package ru.cdf.zoo;
+package com.ifree.zoo;
 
 /**
  * Created by dmitry on 20.12.2015.

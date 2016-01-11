@@ -1,9 +1,7 @@
-package ru.cdf.zoo;
+package com.ifree.zoo;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Maps;
+import com.ifree.zoo.client.ZooClient;
 import org.apache.zookeeper.data.Stat;
-import ru.cdf.zoo.client.ZooClient;
 
 import java.util.*;
 

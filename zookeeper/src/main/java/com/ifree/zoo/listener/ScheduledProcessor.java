@@ -1,8 +1,8 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
-import ru.cdf.zoo.ZPath;
-import ru.cdf.zoo.ZooEvent;
-import ru.cdf.zoo.client.ZooClient;
+import com.ifree.zoo.ZPath;
+import com.ifree.zoo.ZooEvent;
+import com.ifree.zoo.client.ZooClient;
 
 import java.io.IOException;
 import java.util.HashMap;

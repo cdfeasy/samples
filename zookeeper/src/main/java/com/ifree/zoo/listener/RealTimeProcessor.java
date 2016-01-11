@@ -1,4 +1,4 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;

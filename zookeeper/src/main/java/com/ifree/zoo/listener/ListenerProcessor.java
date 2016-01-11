@@ -1,4 +1,4 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
 import java.io.IOException;
 
@@ -9,4 +9,5 @@ public interface ListenerProcessor {
     void start() throws Exception;
     void stop() throws IOException;
     void registerListener(String path, ZooListener listener);
+    void removeListener(ZooListener listener);
 }

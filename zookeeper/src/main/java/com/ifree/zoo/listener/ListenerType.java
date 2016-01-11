@@ -1,4 +1,4 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
 /**
  * Created by dmitry on 20.12.2015.

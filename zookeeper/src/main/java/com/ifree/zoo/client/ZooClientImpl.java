@@ -1,15 +1,14 @@
-package ru.cdf.zoo.client;
+package com.ifree.zoo.client;
 
+import com.ifree.zoo.listener.*;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
-import ru.cdf.zoo.listener.*;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by d.asadullin on 23.11.2015.
@@ -22,9 +21,10 @@ public class ZooClientImpl implements ZooClient {
     private ListenerType listenerType;
     private Integer listenerTime;
     private ListenerProcessor processor;
+    private ZooSerializer serializer;
 
 
-    public ZooClientImpl(String url, RetryPolicy retryPolicy, ListenerType listenerType, Integer listenerTime) {
+    public ZooClientImpl(String url, RetryPolicy retryPolicy, ListenerType listenerType, Integer listenerTime,ZooSerializer serializer) {
         this.url = url;
         this.retryPolicy = retryPolicy;
         this.listenerType = listenerType;
@@ -35,6 +35,7 @@ public class ZooClientImpl implements ZooClient {
         }else{
             processor=new ScheduledProcessor(this,listenerTime);
         }
+        this.serializer=serializer;
     }
 
     @Override
@@ -56,7 +57,7 @@ public class ZooClientImpl implements ZooClient {
 
     @Override
     public void removeListener(ZooListener listener) {
-
+        processor.removeListener(listener);
     }
 
     @Override
@@ -67,9 +68,20 @@ public class ZooClientImpl implements ZooClient {
 
     @Override
     public byte[] getData(String path) throws Exception {
-     //   Stat stat = client.checkExists().forPath(path);
-     //   System.out.println(stat);
+        Stat stat = client.checkExists().forPath(path);
+        if(stat==null){
+            return null;
+        }
         return client.getData().forPath(path);
+    }
+
+    @Override
+    public <T> T getObject(String path, Class<T> toClass) throws Exception {
+        byte[] bytes=getData(path);
+        if(bytes==null){
+            return null;
+        }
+        return serializer.fromBytes(bytes,toClass);
     }
 
     @Override
@@ -92,8 +104,18 @@ public class ZooClientImpl implements ZooClient {
     }
 
     @Override
+    public <T> void createNode(String path, T data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
+        createNode(path,serializer.getBytes(data),mode,createParentsIfNeeded);
+    }
+
+    @Override
     public void setData(String path, byte[] data) throws Exception {
         client.setData().forPath(path, data);
+    }
+
+    @Override
+    public <T> void setObject(String path, T data) throws Exception {
+        setData(path, serializer.getBytes(data));
     }
 
     @Override

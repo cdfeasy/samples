@@ -1,10 +1,12 @@
-package ru.cdf.zoo;
+package com.ifree.zoo;
 
+import com.ifree.zoo.client.GsonZooSerializer;
+import com.ifree.zoo.client.ZooClientImpl;
+import com.ifree.zoo.client.ZooSerializer;
+import com.ifree.zoo.listener.ListenerType;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import ru.cdf.zoo.client.ZooClient;
-import ru.cdf.zoo.client.ZooClientImpl;
-import ru.cdf.zoo.listener.ListenerType;
+import com.ifree.zoo.client.ZooClient;
 
 /**
  * Created by dmitry on 20.12.2015.
@@ -16,6 +18,7 @@ public class ZooClientBuilder {
     private RetryPolicy retryPolicy= new ExponentialBackoffRetry(100, 1);
     private ListenerType listenerType=ListenerType.RealTime;
     private Integer listenerTime=100;
+    private ZooSerializer zooSerializer;
 
     public ZooClientBuilder setUrl(String url) {
         this.url = url;
@@ -29,6 +32,11 @@ public class ZooClientBuilder {
 
     public ZooClientBuilder setPort(String port) {
         this.port = port;
+        return this;
+    }
+
+    public ZooClientBuilder setSerializer(ZooSerializer serializer) {
+        this.zooSerializer = serializer;
         return this;
     }
 
@@ -47,6 +55,9 @@ public class ZooClientBuilder {
         return this;
     }
     public ZooClient build(){
+        if(zooSerializer==null){
+            zooSerializer=new GsonZooSerializer();
+        }
         if(url==null){
             if(port==null){
                 port="2181";
@@ -56,7 +67,7 @@ public class ZooClientBuilder {
             }
             url=host+":"+port;
         }
-        return new ZooClientImpl(url,retryPolicy,listenerType,listenerTime);
+        return new ZooClientImpl(url,retryPolicy,listenerType,listenerTime,zooSerializer);
     }
 
 }

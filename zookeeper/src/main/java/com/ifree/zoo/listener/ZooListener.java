@@ -1,6 +1,6 @@
-package ru.cdf.zoo.listener;
+package com.ifree.zoo.listener;
 
-import ru.cdf.zoo.ZooEvent;
+import com.ifree.zoo.ZooEvent;
 
 /**
  * Created by d.asadullin on 23.11.2015.

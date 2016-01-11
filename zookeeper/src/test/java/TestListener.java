@@ -1,5 +1,5 @@
-import ru.cdf.zoo.ZooEvent;
-import ru.cdf.zoo.listener.ZooListener;
+import com.ifree.zoo.ZooEvent;
+import com.ifree.zoo.listener.ZooListener;
 
 /**
  * Created by dmitry on 27.12.2015.
