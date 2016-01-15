@@ -45,7 +45,7 @@ public class ZPath {
         cur.time=stat.getMtime();
         List<ZPath> ch = new ArrayList<>(stat.getNumChildren());
         if(stat.getNumChildren()>0) {
-            List<String> children = client.getChildren(path);
+            List<String> children = client.getChildren(path).get();
             for (String s : children) {
                 ZPath child = getZPath(client, (path.length() > 1 ? path + "/" + s : "/" + s), cur);
                 if (child != null) {

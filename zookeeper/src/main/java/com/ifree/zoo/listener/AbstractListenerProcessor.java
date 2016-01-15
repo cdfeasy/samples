@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public abstract class AbstractListenerProcessor implements ListenerProcessor {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
-    private Map<String, List<ZooListener>> intListeners = new HashMap<>();
+    private Map<String, List<ZooListenerWrapper>> intListeners = new HashMap<>();
 
     protected void checkListener(String path, PathChildrenCacheEvent event) {
         ZPath zPath = ZPath.getZPath(path);
@@ -30,13 +30,16 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
         }
     }
 
-    protected Map<String, List<ZooListener>> getIntListeners() {
+    protected Map<String, List<ZooListenerWrapper>> getIntListeners() {
         return intListeners;
     }
 
-    protected void processListenerForPath(List<ZooListener> listeners, PathChildrenCacheEvent event, Boolean isNode) {
-        for (ZooListener l : listeners) {
+    protected void processListenerForPath(List<ZooListenerWrapper> listeners, PathChildrenCacheEvent event, Boolean isNode) {
+        for (ZooListenerWrapper l : listeners) {
             try {
+                if(!isNode&&!l.isCheckChildren()){
+                    continue;
+                }
                 if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
                     l.onChange(event.getData().getPath(), event.getData().getData(), isNode ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
                 } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
@@ -51,7 +54,7 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
     }
 
     @Override
-    public void registerListener(String path, ZooListener listener) {
+    public void registerListener(String path, ZooListener listener, boolean checkChildren) {
         if ("/".equals(path)) {
             path = "";
         }
@@ -59,10 +62,10 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
             path = path.substring(0, path.length() - 2);
         }
         if (intListeners.containsKey(path)) {
-            intListeners.get(path).add(listener);
+            intListeners.get(path).add(new ZooListenerWrapper(listener,checkChildren));
         } else {
-            List<ZooListener> l = new ArrayList<>();
-            l.add(listener);
+            List<ZooListenerWrapper> l = new ArrayList<>();
+            l.add(new ZooListenerWrapper(listener,checkChildren));
             intListeners.put(path, l);
             try {
                 initListener(path);
@@ -74,8 +77,9 @@ public abstract class AbstractListenerProcessor implements ListenerProcessor {
 
     @Override
     public void removeListener(ZooListener listener) {
+        ZooListenerWrapper wrapper=new ZooListenerWrapper(listener,false);
         intListeners.forEach((a, b) -> {
-            if (b.contains(listener)) b.remove(listener);
+            if (b.contains(wrapper)) b.remove(wrapper);
         });
     }
 

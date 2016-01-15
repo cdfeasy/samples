@@ -63,7 +63,7 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
 
     private void checkChanges(Map<String, ZPath> oldData, Map<String, ZPath> newData) throws Exception {
         for (String path : getIntListeners().keySet()) {
-            List<ZooListener> listeners = getIntListeners().get(path);
+            List<ZooListenerWrapper> listeners = getIntListeners().get(path);
             ZPath o = oldData.get(path);
             ZPath n = newData.get(path);
             diff(o, n, listeners, true);
@@ -85,14 +85,17 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
         }
     }
 
-    private void diff(ZPath oldValue, ZPath newValue, List<ZooListener> listeners, boolean isRoot) throws Exception {
+    private void diff(ZPath oldValue, ZPath newValue, List<ZooListenerWrapper> listeners, boolean isRoot) throws Exception {
         if (oldValue != null && newValue != null) {
             if ((oldValue.getVersion() != newValue.getVersion()) || (oldValue.getTime() != newValue.getTime())) {
-                byte[] data = client.getData(newValue.getFullPath());
-                listeners.forEach(new Consumer<ZooListener>() {
+                byte[] data = client.getData(newValue.getFullPath()).getBytes();
+                listeners.forEach(new Consumer<ZooListenerWrapper>() {
                     @Override
-                    public void accept(ZooListener zooListener) {
+                    public void accept(ZooListenerWrapper zooListener) {
                         try {
+                            if(!isRoot&&!zooListener.isCheckChildren()){
+                                return;
+                            }
                             zooListener.onChange(newValue.getFullPath(), data, isRoot ? ZooEvent.NodeDataChanged : ZooEvent.NodeChildrenChanged);
                         } catch (Exception ex) {
                             logger.error("Listener exception", ex);
@@ -101,11 +104,14 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
                 });
             }
         } else if (oldValue == null && newValue != null) {
-            byte[] data = client.getData(newValue.getFullPath());
-            listeners.forEach(new Consumer<ZooListener>() {
+            byte[] data = client.getData(newValue.getFullPath()).getBytes();
+            listeners.forEach(new Consumer<ZooListenerWrapper>() {
                 @Override
-                public void accept(ZooListener zooListener) {
+                public void accept(ZooListenerWrapper zooListener) {
                     try {
+                        if(!isRoot&&!zooListener.isCheckChildren()){
+                            return;
+                        }
                         zooListener.onChange(newValue.getFullPath(), data, isRoot ? ZooEvent.NodeCreated : ZooEvent.NodeChildrenAdded);
                     } catch (Exception ex) {
                         logger.error("Listener exception", ex);
@@ -113,10 +119,13 @@ public class ScheduledProcessor extends AbstractListenerProcessor {
                 }
             });
         } else if (oldValue != null && newValue == null) {
-            listeners.forEach(new Consumer<ZooListener>() {
+            listeners.forEach(new Consumer<ZooListenerWrapper>() {
                 @Override
-                public void accept(ZooListener zooListener) {
+                public void accept(ZooListenerWrapper zooListener) {
                     try {
+                        if(!isRoot&&!zooListener.isCheckChildren()){
+                            return;
+                        }
                         zooListener.onDelete(oldValue.getFullPath(), isRoot ? ZooEvent.NodeDeleted : ZooEvent.NodeChildrenDeleted);
                     } catch (Exception ex) {
                         logger.error("Listener exception", ex);

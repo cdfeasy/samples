@@ -4,11 +4,17 @@ import com.ifree.zoo.listener.*;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /**
  * Created by d.asadullin on 23.11.2015.
@@ -24,18 +30,18 @@ public class ZooClientImpl implements ZooClient {
     private ZooSerializer serializer;
 
 
-    public ZooClientImpl(String url, RetryPolicy retryPolicy, ListenerType listenerType, Integer listenerTime,ZooSerializer serializer) {
+    public ZooClientImpl(String url, RetryPolicy retryPolicy, ListenerType listenerType, Integer listenerTime, ZooSerializer serializer) {
         this.url = url;
         this.retryPolicy = retryPolicy;
         this.listenerType = listenerType;
         this.listenerTime = listenerTime;
         client = CuratorFrameworkFactory.newClient(url, retryPolicy);
-        if(ListenerType.RealTime.equals(listenerType)){
-            processor=new RealTimeProcessor(client);
-        }else{
-            processor=new ScheduledProcessor(this,listenerTime);
+        if (ListenerType.RealTime.equals(listenerType)) {
+            processor = new RealTimeProcessor(client);
+        } else {
+            processor = new ScheduledProcessor(this, listenerTime);
         }
-        this.serializer=serializer;
+        this.serializer = serializer;
     }
 
     @Override
@@ -46,13 +52,18 @@ public class ZooClientImpl implements ZooClient {
 
     @Override
     public void stop() throws IOException {
-        client.close();
         processor.stop();
+        client.close();
+    }
+
+    @Override
+    public void addListener(String path, ZooListener listener, boolean checkChildren) {
+        processor.registerListener(path, listener, checkChildren);
     }
 
     @Override
     public void addListener(String path, ZooListener listener) {
-        processor.registerListener(path,listener);
+        addListener(path, listener, false);
     }
 
     @Override
@@ -61,9 +72,8 @@ public class ZooClientImpl implements ZooClient {
     }
 
     @Override
-    public List<String> getChildren(String path) throws Exception {
-        List<String> strings = client.getChildren().forPath(path);
-        return strings;
+    public GetChildrenBuilder getChildren(String path) throws Exception {
+        return new GetChildrenBuilder(path,client);
     }
 
     @Override
@@ -72,67 +82,87 @@ public class ZooClientImpl implements ZooClient {
     }
 
     @Override
-    public byte[] getData(String path) throws Exception {
-        Stat stat = client.checkExists().forPath(path);
-        if(stat==null){
-            return null;
-        }
-        return client.getData().forPath(path);
+    public CuratorFramework getCuratorClient() {
+        return client;
     }
 
     @Override
-    public <T> T getObject(String path, Class<T> toClass) throws Exception {
-        byte[] bytes=getData(path);
-        if(bytes==null){
-            return null;
-        }
-        return serializer.fromBytes(bytes,toClass);
+    public GetResultBuilder getData(String path) throws Exception {
+        return new GetResultBuilder(path,client,serializer);
     }
 
     @Override
     public Stat getStat(String path) throws Exception {
-        return  client.checkExists().forPath(path);
+        return client.checkExists().forPath(path);
+    }
+
+    @Override
+    public Stat getStat(String path, CuratorWatcher listener) throws Exception {
+        return client.checkExists().usingWatcher(listener).forPath(path);
+    }
+
+    @Override
+    public void awaitingDelete(List<String> list, Runnable eventListener) throws Exception {
+        CountDownLatch latch = new CountDownLatch(list.size());
+        CuratorWatcher watcher= event -> {
+            if (Watcher.Event.EventType.NodeDeleted.equals(event.getType())) {
+                latch.countDown();
+                if (latch.getCount() == 0) {
+                    eventListener.run();
+                }
+            }
+        };
+        for (String path : list) {
+            if (getStat(path) != null) {
+                getStat(path, watcher);
+            } else {
+                latch.countDown();
+                if (latch.getCount() == 0) {
+                    eventListener.run();
+                }
+            }
+        }
     }
 
     @Override
     public String createNode(String path, byte[] data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
-        String res=path;
-        if(!CreateMode.EPHEMERAL_SEQUENTIAL.equals(path)&&!CreateMode.PERSISTENT_SEQUENTIAL.equals(mode)) {
+        String res = path;
+        if (!CreateMode.EPHEMERAL_SEQUENTIAL.equals(path) && !CreateMode.PERSISTENT_SEQUENTIAL.equals(mode)) {
             Stat stat = client.checkExists().forPath(path);
             if (stat != null) {
-                setData(path, data);
+                setData(path).setBytes(data).set();
                 return res;
             }
         }
-        if(createParentsIfNeeded) {
-            res=client.create().creatingParentsIfNeeded().withMode(mode).forPath(path,data);
-        } else{
-            res=client.create().withMode(mode).forPath(path,data);
+        if (createParentsIfNeeded) {
+            res = client.create().creatingParentsIfNeeded().withMode(mode).forPath(path, data);
+        } else {
+            res = client.create().withMode(mode).forPath(path, data);
         }
         return res;
     }
 
     @Override
     public <T> String createNode(String path, T data, CreateMode mode, boolean createParentsIfNeeded) throws Exception {
-        return createNode(path,serializer.getBytes(data),mode,createParentsIfNeeded);
+        return createNode(path, serializer.getBytes(data), mode, createParentsIfNeeded);
     }
 
     @Override
-    public void setData(String path, byte[] data) throws Exception {
-        client.setData().forPath(path, data);
-    }
-
-    @Override
-    public <T> void setObject(String path, T data) throws Exception {
-        setData(path, serializer.getBytes(data));
+    public SetDataBuilder setData(String path) throws Exception {
+        return new SetDataBuilder(path,client,serializer);
     }
 
     @Override
     public void deleteNode(String path, boolean deleteChildrenIfNeeded) throws Exception {
-        if(deleteChildrenIfNeeded) {
+        Stat stat = client.checkExists().forPath(path);
+        if (stat == null) {
+            return;
+        }
+        if (deleteChildrenIfNeeded) {
             client.delete().deletingChildrenIfNeeded().forPath(path);
         } else {
             client.delete().forPath(path);
         }
     }
+    public static void main(String args[]){}
 }

@@ -8,6 +8,6 @@ import java.io.IOException;
 public interface ListenerProcessor {
     void start() throws Exception;
     void stop() throws IOException;
-    void registerListener(String path, ZooListener listener);
+    void registerListener(String path, ZooListener listener, boolean checkChildren);
     void removeListener(ZooListener listener);
 }
