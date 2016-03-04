@@ -7,17 +7,49 @@
     <groupId>samples</groupId>
     <artifactId>kafka</artifactId>
     <version>1.0-SNAPSHOT</version>
-
+    <properties>
+        <version.async-http-client>1.8.3</version.async-http-client>
+        <version.junit>4.11</version.junit>
+        <version.logback>1.0.9</version.logback>
+        <version.slf4j>1.7.2</version.slf4j>
+        <gson.version>2.5</gson.version>
+    </properties>
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>org.apache.kafka</groupId>-->
-            <!--<artifactId>kafka-clients</artifactId>-->
-            <!--<version>0.8.2.0</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${version.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${version.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${version.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
-            <version>0.8.2.1</version>
+            <artifactId>kafka-clients</artifactId>
+            <version>0.9.0.1</version>
         </dependency>
 
     </dependencies>
