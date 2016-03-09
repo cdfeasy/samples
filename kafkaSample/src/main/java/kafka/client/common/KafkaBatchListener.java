@@ -6,5 +6,6 @@ import java.util.List;
  * Created by d.asadullin on 02.03.2016.
  */
 public interface KafkaBatchListener<T> {
+    int getBatchSize();
     void onMessages(List<T> messages);
 }

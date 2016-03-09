@@ -16,10 +16,10 @@ public class KafkaConfigBuilder<T> {
     private String groupId;
     private String clientId;
 
-    private String keySerializer;
-    private String valueSerializer;
-    private String keyDeserializer;
-    private String valueDeserializer;
+    private org.apache.kafka.common.serialization.Serializer keySerializer;
+    private org.apache.kafka.common.serialization.Serializer valueSerializer;
+    private Deserializer keyDeserializer;
+    private Deserializer valueDeserializer;
     private Properties properties;
     private String topic;
     private KafkaClient.Mode mode;
@@ -54,22 +54,22 @@ public class KafkaConfigBuilder<T> {
         return this;
     }
 
-    public KafkaConfigBuilder setKeySerializer(String keySerializer) {
+    public KafkaConfigBuilder setKeySerializer(Serializer keySerializer) {
         this.keySerializer = keySerializer;
         return this;
     }
 
-    public KafkaConfigBuilder setValueSerializer(String valueSerializer) {
+    public KafkaConfigBuilder setValueSerializer(Serializer valueSerializer) {
         this.valueSerializer = valueSerializer;
         return this;
     }
 
-    public KafkaConfigBuilder setKeyDeserializer(String keyDeserializer) {
+    public KafkaConfigBuilder setKeyDeserializer(Deserializer keyDeserializer) {
         this.keyDeserializer = keyDeserializer;
         return this;
     }
 
-    public KafkaConfigBuilder setValueDeserializer(String valueDeserializer) {
+    public KafkaConfigBuilder setValueDeserializer(Deserializer valueDeserializer) {
         this.valueDeserializer = valueDeserializer;
         return this;
     }
@@ -113,19 +113,19 @@ public class KafkaConfigBuilder<T> {
         return clientId;
     }
 
-    public String getKeySerializer() {
+    public Serializer getKeySerializer() {
         return keySerializer;
     }
 
-    public String getValueSerializer() {
+    public Serializer getValueSerializer() {
         return valueSerializer;
     }
 
-    public String getKeyDeserializer() {
+    public Deserializer getKeyDeserializer() {
         return keyDeserializer;
     }
 
-    public String getValueDeserializer() {
+    public Deserializer getValueDeserializer() {
         return valueDeserializer;
     }
 
