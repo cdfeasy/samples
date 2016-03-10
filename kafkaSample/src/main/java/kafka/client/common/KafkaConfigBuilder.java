@@ -1,14 +1,16 @@
 package kafka.client.common;
 
+import kafka.client.impl.KafkaClientImpl;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 
+import java.io.Serializable;
 import java.util.Properties;
 
 /**
  * Created by d.asadullin on 02.03.2016.
  */
-public class KafkaConfigBuilder<T> {
+public class KafkaConfigBuilder<K, V> {
     private String servers;
     private String asks;
     private Integer batchSize;
@@ -87,6 +89,9 @@ public class KafkaConfigBuilder<T> {
     public KafkaConfigBuilder setMode(KafkaClient.Mode mode) {
         this.mode = mode;
         return this;
+    }
+    public KafkaClient<K, V> build(){
+        return new KafkaClientImpl<K,V>(this);
     }
 
     public String getServers() {

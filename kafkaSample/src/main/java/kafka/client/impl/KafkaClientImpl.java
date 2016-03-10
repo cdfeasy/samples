@@ -2,11 +2,15 @@ package kafka.client.impl;
 
 import kafka.client.common.*;
 import kafka.client.serializer.BasicSerializer;
-import kafka.client.serializer.GsonSerializer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -18,20 +22,36 @@ import java.util.stream.Collectors;
 /**
  * Created by d.asadullin on 02.03.2016.
  */
-public class KafkaClientImpl<T> implements KafkaClient<T> {
+public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     private KafkaProducer<byte[], byte[]> producer;
     private KafkaConsumer<byte[], byte[]> consumer;
-    private LinkedBlockingQueue<BatchEntry<T>> send;
-    private List<KafkaListener<T>> listeners;
-    private List<KafkaBatchListener<T>> batchListeners;
+    private LinkedBlockingQueue<KafkaEntry<K,V>> send;
+    private List<KafkaListener<K,V>> listeners;
+    private List<KafkaBatchListener<K,V>> batchListeners;
     private ScheduledExecutorService executorService;
     private AtomicBoolean isRunning = new AtomicBoolean(false);
-    private KafkaReceiveProcessor<T> receiveProcessor;
-    private KafkaSendProcessor<T> sendProcessor;
-    private KafkaListener<byte[]> exceptionListener;
+    private KafkaReceiveProcessor<K,V> receiveProcessor;
+    private KafkaSendProcessor<K,V> sendProcessor;
+   // private KafkaListener<byte[]> exceptionListener;
 
+    private static Class<?> getClass(Class type)
+    {
+        Type[] genericInterfaces = type.getGenericInterfaces();
+        for (Type genericInterface : genericInterfaces) {
+            if (genericInterface instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) genericInterface;
+                Type[] actualTypeArguments = pt.getActualTypeArguments();
 
-    public KafkaClientImpl(KafkaConfigBuilder<T> configBuilder) {
+                for (Type actualTypeArgument : actualTypeArguments) {
+                    if (actualTypeArgument instanceof Class) {
+                        return (Class) actualTypeArgument;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    public KafkaClientImpl(KafkaConfigBuilder<K,V> configBuilder) {
         send = new LinkedBlockingQueue<>();
         listeners = new CopyOnWriteArrayList<>();
         batchListeners = new CopyOnWriteArrayList<>();
@@ -92,71 +112,90 @@ public class KafkaClientImpl<T> implements KafkaClient<T> {
             }
             consumer = new KafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList(configBuilder.getTopic()));
-            //   Class<T> c = (Class<T>) ((ParameterizedTyp) getClass()
-            //             .getGenericSuperclass()).getActualTypeArguments()[0];
-            receiveProcessor = new KafkaReceiveProcessor<>(isRunning, consumer, configBuilder, String.class);
+           // getClass(this.getClass());
+         //   Type type = this.getClass().getTypeParameters()[0].getBounds()[0];
+//            Class<K> key = (Class<K>) ((ParameterizedType) configBuilder.getClass()
+//                    .getGenericSuperclass()).getActualTypeArguments()[0];
+//            Class<V> value = (Class<V>) (Class<V>) ((ParameterizedType) configBuilder.getClass()
+//                    .getGenericSuperclass()).getActualTypeArguments()[1];
+            receiveProcessor = new KafkaReceiveProcessor<>(isRunning, consumer, configBuilder);
         }
     }
 
     @Override
-    public void send(T object) {
-        send.add(new BatchEntry<T>(object, null));
+    public void send(V object) {
+        send.add(new KafkaEntry<K,V>(object, null));
     }
 
     @Override
-    public void send(List<T> objects) throws Exception {
-        send.addAll(objects.stream().map((a) -> new BatchEntry<T>(a, null)).collect(Collectors.toList()));
+    public void send(List<V> objects) throws Exception {
+        send.addAll(objects.stream().map((a) -> new KafkaEntry<K,V>(a, null)).collect(Collectors.toList()));
     }
 
     @Override
-    public void send(T object, Callback callback) {
-        send.add(new BatchEntry<T>(object, callback));
+    public void send(V object, Callback callback) {
+        send.add(new KafkaEntry<K,V>(object, callback));
     }
 
     @Override
-    public void send(Object key, T object, Callback callback) {
-        send.add(new BatchEntry<T>(key, object, callback));
+    public void send(K key, V object, Callback callback) {
+        send.add(new KafkaEntry<K,V>(key, object, callback));
     }
 
     @Override
-    public void sendBatch(List<BatchEntry<T>> objects) {
+    public void sendBatch(List<KafkaEntry<K, V>> objects) {
         send.addAll(objects);
     }
 
     @Override
-    public T receive() throws InterruptedException {
-        T t = receiveProcessor.receive();
-        return t;
+    public V receive() throws InterruptedException {
+
+        KafkaEntry<K,V> t = receiveProcessor.receive();
+        if(t!=null){
+            return t.getObject();
+        } else{
+            return null;
+        }
     }
 
     @Override
-    public List<T> receive(int count) {
-        List<T> result = receiveProcessor.batchReceive(count);
+    public KafkaEntry<K, V> receiveEntry() throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public List<V> receive(int count) {
+        List<V> result = receiveProcessor.batchReceiveValue(count);
         return result;
     }
 
     @Override
-    public void addListener(KafkaListener<T> listener) {
+    public List<KafkaEntry<K, V>> receiveEntries(int count) {
+        return receiveProcessor.batchReceive(count);
+    }
+
+    @Override
+    public void addListener(KafkaListener<K, V> listener) {
         listeners.add(listener);
     }
 
-    @Override
-    public void addExceptionMessageListener(KafkaListener listener) {
-        this.exceptionListener=listener;
-    }
+//    @Override
+//    public void addExceptionMessageListener(KafkaListener listener) {
+//        this.exceptionListener=listener;
+//    }
 
     @Override
-    public void addListener(KafkaBatchListener<T> listener) {
+    public void addListener(KafkaBatchListener<K, V> listener) {
         batchListeners.add(listener);
     }
 
     @Override
-    public void removeListener(KafkaListener<T> listener) {
+    public void removeListener(KafkaListener<K, V> listener) {
         listeners.remove(listener);
     }
 
     @Override
-    public void removeListener(KafkaBatchListener<T> listener) {
+    public void removeListener(KafkaBatchListener<K, V> listener) {
         batchListeners.remove(listener);
     }
 

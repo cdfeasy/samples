@@ -12,6 +12,9 @@ import java.util.Map;
 public class BasicSerializer implements Serializer, Deserializer {
     @Override
     public Object deserialize(String topic, byte[] data) {
+        if(data==null){
+            return null;
+        }
         return new String(data, StandardCharsets.UTF_8);
     }
 

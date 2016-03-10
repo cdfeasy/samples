@@ -1,8 +1,7 @@
 package kafka.client.impl;
 
-import kafka.client.Serializer;
 import kafka.client.common.KafkaConfigBuilder;
-import kafka.client.serializer.GsonSerializer;
+import kafka.client.common.KafkaEntry;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -14,36 +13,37 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by d.asadullin on 03.03.2016.
  */
-public class KafkaReceiveProcessor<T> implements Runnable {
+public class KafkaReceiveProcessor<K,V> implements Runnable {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
     private KafkaConsumer<byte[], byte[]> consumer;
     private int batchSize;
-    private Deserializer<T> keyDeserializer;
-    private Deserializer<T> valueDeserializer;
-    private Class<T> clazz;
+    private Deserializer<K> keyDeserializer;
+    private Deserializer<V> valueDeserializer;
     private Integer cnt = 0;
     private AtomicInteger received=new AtomicInteger();
     private LinkedList<Map<TopicPartition, OffsetAndMetadata>> toPush = new LinkedList<>();
     private AtomicBoolean isRunning;
     private ConcurrentHashMap<TopicPartition,LinkedBlockingQueue<ConsumerRecord<byte[], byte[]>>> records=new ConcurrentHashMap<>();
-    private ReentrantLock lock=new ReentrantLock();
+    private ReentrantReadWriteLock lock=new ReentrantReadWriteLock();
     private Map<TopicPartition,Long> commitMap=new HashMap<>();
 
-    public KafkaReceiveProcessor(AtomicBoolean isRunning, KafkaConsumer<byte[], byte[]> consumer, KafkaConfigBuilder configBuilder, Class clazz) {
+    public KafkaReceiveProcessor(AtomicBoolean isRunning, KafkaConsumer<byte[], byte[]> consumer, KafkaConfigBuilder configBuilder) {
         this.consumer = consumer;
         this.batchSize = configBuilder.getBatchSize();
         this.keyDeserializer=configBuilder.getKeyDeserializer();
         this.valueDeserializer=configBuilder.getValueDeserializer();
-        this.clazz = clazz;
         this.isRunning=isRunning;
     }
 
@@ -60,19 +60,19 @@ public class KafkaReceiveProcessor<T> implements Runnable {
         commitMap.clear();
     }
     public void check(){
-        lock.lock();
+        lock.readLock().lock();
         try {
             while (received.get() >= batchSize) {
                 received.set(0);
                 commit();
             }
         }finally {
-            lock.unlock();
+            lock.readLock().unlock();
         }
     }
 
     private  void pollIfNeeded() throws InterruptedException {
-        lock.lock();
+        lock.writeLock().lock();
         try {
             for (TopicPartition partition : records.keySet()) {
                 if (records.get(partition).isEmpty()) {
@@ -86,50 +86,57 @@ public class KafkaReceiveProcessor<T> implements Runnable {
                 }
             }
         }finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
         Thread.sleep(100);
     }
 
-    public T receive(){
+    public KafkaEntry<K,V> receive(){
         if(!isRunning.get()){
             return null;
         }
-        lock.lock();
+        List<KafkaEntry<K,V>> list=batchReceive(1);
+        return list.size()==0?null:list.get(0);
+    }
+    public List<KafkaEntry<K,V>> batchReceive(int count){
+        List<KafkaEntry<K,V>> list=new ArrayList<>();
+        if(!isRunning.get()){
+            return list;
+        }
+        lock.readLock().lock();
         try {
+            int cnt=0;
             for (TopicPartition partition : records.keySet()) {
                 ConsumerRecord<byte[], byte[]> rec = records.get(partition).poll();
                 if (rec != null) {
                     try {
-                        T obj = (T) valueDeserializer.deserialize(partition.topic(), rec.value());
+                        K key =  keyDeserializer.deserialize(partition.topic(),rec.key());
+                        V obj =  valueDeserializer.deserialize(partition.topic(), rec.value());
                         commitMap.put(partition, rec.offset() + 1);
                         received.incrementAndGet();
-                        return obj;
+                        list.add(new KafkaEntry<K, V>(key,obj));
+                        if(cnt++==count){
+                           break;
+                        }
                     }catch (Exception ex){
                         logger.error("Cannot deserialize message",ex);
                     }
                 }
             }
-            return null;
         }finally {
-            lock.unlock();
-        }
-    }
-    public List<T> batchReceive(int count){
-        List<T> list=new ArrayList<>();
-        if(!isRunning.get()){
-            return list;
-        }
-        for(int i=0;i<count;i++){
-            T obj=receive();
-            if(obj!=null) {
-                list.add(obj);
-            } else{
-                return list;
-            }
+            lock.readLock().unlock();
         }
         return list;
     }
+
+    public List<V> batchReceiveValue(int count){
+        if(!isRunning.get()){
+            return new ArrayList<>();
+        }
+        List<KafkaEntry<K,V>> rec=batchReceive(count);
+        return rec.stream().map((r)->r.getObject()).collect(Collectors.toList());
+    }
+
 
     @Override
     public void run() {
