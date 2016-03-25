@@ -38,6 +38,7 @@ public class KafkaReceiveProcessor<K,V> implements Runnable {
     private ConcurrentHashMap<TopicPartition,LinkedBlockingQueue<ConsumerRecord<byte[], byte[]>>> records=new ConcurrentHashMap<>();
     private ReentrantReadWriteLock lock=new ReentrantReadWriteLock();
     private Map<TopicPartition,Long> commitMap=new HashMap<>();
+    private long lastCommit;
 
     public KafkaReceiveProcessor(AtomicBoolean isRunning, KafkaConsumer<byte[], byte[]> consumer, KafkaConfigBuilder configBuilder) {
         this.consumer = consumer;

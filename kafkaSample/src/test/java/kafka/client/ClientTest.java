@@ -143,7 +143,11 @@ public class ClientTest {
 //        consumer.commitSync();
 
 
- //   }
+// //   }
+// @Test
+// public void test5() throws Exception {
+//      Arrays.stream(new int[]{1,2,3,4}).flatMap()
+// }
 
     @Test
     public void test4() throws Exception {
