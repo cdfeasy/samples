@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+
+<!-- 
+	This is Jetty configuration file, supposed to be more efficient than default.
+	Don't forget about Java options, and Kernel tuning.
+	
+	For more info about Jetty perfomance see this links:
+	
+		http://wiki.eclipse.org/Jetty/Howto/High_Load
+		http://wiki.eclipse.org/Jetty/Howto/Configure_Connectors
+		http://docs.codehaus.org/display/JETTY/HighLoadServers
+		http://docs.codehaus.org/display/JETTY/Walkthrough+jetty.xml
+		http://cometdaily.com/2008/01/07/20000-reasons-that-comet-scales/
+		
+ -->
+
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+<!--
+    <Set name="ThreadPool">
+        <New class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+            <Set name="minThreads">30</Set>
+            <Set name="maxThreads">500</Set>
+        </New>
+    </Set>
+-->
+    <Call name="addConnector">
+        <Arg>
+            <!-- Jetty connector type. SelectChannelConnector is asynchronyos and uses NIO. -->
+            <New class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+
+                <!-- Bind adress -->
+                <Set name="host">172.27.3.98</Set>
+                <!-- Bind port -->
+                <Set name="port">8080</Set>
+
+                <!-- Size of the connection accept queue, must be same as kern.ipc.somaxconn kernel parameter. -->
+                <Set name="AcceptQueueSize">256</Set>
+
+                <!-- Maximum Idle time for a connection -->
+                <Set name="maxIdleTime">2000000000</Set>
+
+                <!-- Set the number of connections, which if exceeded places this connector in a low resources state -->
+                <Set name="lowResourcesConnections">2000000000</Set>
+
+                <!-- Maximum Idle time for a connection, when connector is in low resources state.-->
+                <Set name="lowResourcesMaxIdleTime">2000000000</Set>
+
+                <!-- Turn off connection statistics -->
+                <Set name="statsOn">false</Set>
+
+                <!-- Don't resolve ip addresses to names -->
+                <Set name="resolveNames">false</Set>
+
+            </New>
+        </Arg>
+    </Call>
+
+
+</Configure>
