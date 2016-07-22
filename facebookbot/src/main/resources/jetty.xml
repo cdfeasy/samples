@@ -16,21 +16,21 @@
  -->
 
 <Configure id="Server" class="org.eclipse.jetty.server.Server">
-<!--
-    <Set name="ThreadPool">
-        <New class="org.eclipse.jetty.util.thread.QueuedThreadPool">
-            <Set name="minThreads">30</Set>
-            <Set name="maxThreads">500</Set>
-        </New>
-    </Set>
--->
+    <!--
+        <Set name="ThreadPool">
+            <New class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+                <Set name="minThreads">30</Set>
+                <Set name="maxThreads">500</Set>
+            </New>
+        </Set>
+    -->
     <Call name="addConnector">
         <Arg>
             <!-- Jetty connector type. SelectChannelConnector is asynchronyos and uses NIO. -->
             <New class="org.eclipse.jetty.server.nio.SelectChannelConnector">
 
                 <!-- Bind adress -->
-                <Set name="host">172.27.3.98</Set>
+                <Set name="host">0.0.0.0</Set>
                 <!-- Bind port -->
                 <Set name="port">8080</Set>
 
