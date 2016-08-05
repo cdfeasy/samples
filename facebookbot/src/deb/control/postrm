@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+DUSER="citibank-facebook-bot"
+PKGNAME="citibank-facebook-bot"
+
+case "$1" in
+	purge)
+		deluser ${DUSER}
+	;;
+
+	remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+	;;
+
+	*)
+		echo "postrm called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+exit 0

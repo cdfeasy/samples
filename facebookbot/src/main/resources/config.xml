@@ -8,17 +8,23 @@
         http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
-    <context:component-scan base-package="facebookbot.facebookbot" />
+    <context:component-scan base-package="facebookbot" />
     <context:property-placeholder properties-ref="props"/>
 
     <bean id="props"
           class="org.springframework.beans.factory.config.PropertiesFactoryBean">
         <property name="properties">
             <props>
+                <prop key="connect.url">sms-spamm-jndi-gate2.grave01.i-free.ru:1300,sms-spamm-jndi-gate1.grave01.i-free.ru:1300</prop>
+                <prop key="connect.node.id">8502</prop>
+                <prop key="connect.node.name">Telegram_Chat</prop>
+                <prop key="facebook.sender.access_token">EAAEM03dlGIABAJANenZBNFlPtEZBZCjexOLXUZBTZAZAAY56I1uEO6SPAUeJZCH9EejtZCY0GR4izQIGxZBbPjsD8CTmBeGxxqJPdeVP2dPNJyEkO9ZBmSSn92QvK1r2G8o2r7djD9ZCyABHEZAmsU6XzzIjxxDtj3G4HhzemVpNssvYZCwZDZD</prop>
                 <prop key="server.port">8080</prop>
             </props>
         </property>
     </bean>
+
+
     <!--<bean id="barService" class="app.service.BarService">-->
         <!--<property name="dataSource" ref="dataSource"/>-->
     <!--</bean>-->

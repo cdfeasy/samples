@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+DUSER="citibank-facebook-bot"
+PKGNAME="citibank-facebook-bot"
+
+case "$1" in
+	configure)
+		install -m u+rwx,a+rX,go-w -o ${DUSER} -g nogroup \
+			-d /var/log/${PKGNAME} \
+			-d /var/cache/${PKGNAME}
+	;;	
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+	;;
+
+	*)
+		echo "postinst called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+exit 0

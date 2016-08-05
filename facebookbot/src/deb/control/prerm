@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+PKGNAME="citibank-facebook-bot"
+DEXEC=/etc/init.d/${PKGNAME}
+
+case "$1" in
+	remove)
+		if [ -x ${DEXEC} ]; then
+			${DEXEC} stop
+		fi
+	;;
+
+	upgrade|deconfigure)
+	;;
+
+	failed-upgrade)
+	;;
+
+	*)
+		echo "prerm called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+exit 0

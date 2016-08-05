@@ -1,6 +1,8 @@
-package facebookbot;
+package facebookbot.service;
 
+import facebookbot.entity.Entry;
 import facebookbot.entity.MessageResp;
+import facebookbot.entity.Messaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,16 +20,21 @@ import java.util.Map;
 public class BotController {
     @Autowired
     private HttpServletRequest request;
+    @Autowired
+    private BotProcessor processor;
     @RequestMapping(value = "/send/test",method = {RequestMethod.POST,RequestMethod.GET})
     public @ResponseBody
     String greeting(@RequestParam Map<String,String> allRequestParams,@RequestBody(required = false) MessageResp body) {
         System.out.println(Collections.list(request.getHeaderNames()));
         System.out.println(body);
-        if(allRequestParams!=null){
-            for(Map.Entry entry:allRequestParams.entrySet()){
-                System.out.println(entry.getKey()+"/"+entry.getValue());
+        if(body!=null&& body.getEntry()!=null){
+            for(Entry entry:body.getEntry())
+               if(entry.getMessaging()!=null) {
+                   for(Messaging message:entry.getMessaging()) {
+                       processor.process(message);
+                   }
+               }
             }
-        }
         return allRequestParams.get("hub.challenge");
     }
 }

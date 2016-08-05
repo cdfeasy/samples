@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+DUSER="citibank-facebook-bot"
+PKGNAME="citibank-facebook-bot"
+
+case "$1" in
+	install|upgrade)
+		if ! id ${DUSER} > /dev/null 2>&1; then
+			useradd --system -d /usr/share/${PKGNAME} \
+				--no-user-group --no-log-init -g nogroup \
+				--shell /bin/bash ${DUSER}
+		fi
+	;;
+
+	abort-upgrade)
+	;;
+
+	*)
+		echo "preinst called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+exit 0

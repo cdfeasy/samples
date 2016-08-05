@@ -7,9 +7,11 @@ package facebookbot;
 //
 //import java.net.URL;
 
+import facebookbot.service.FacebookSender;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
@@ -25,7 +27,10 @@ import org.springframework.context.annotation.ImportResource;
 public class HttpServer {
 
     public static void main(String[] args) {
-        SpringApplication.run(HttpServer.class, args);
+
+        ConfigurableApplicationContext run = SpringApplication.run(HttpServer.class, args);
+       // FacebookSender bean = run.getBean(FacebookSender.class);
+       // bean.send("Olol","884690841635895");
     }
 
 

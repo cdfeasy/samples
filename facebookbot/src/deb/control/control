@@ -1,0 +1,11 @@
+Source: citibank-facebook-bot
+Section: main/IBS
+Priority: extra
+Maintainer: d.asadullin <d.asadullin @i-free.com>
+Build-Depends: java7-runtime,
+Standards-Version: 3.7.3
+Package: citibank-telegram-bot
+Version: [[parsedVersion.majorVersion]].[[parsedVersion.minorVersion]].[[parsedVersion.incrementalVersion]]-[[build.number]]
+Architecture: all
+Depends: java7-runtime
+Description: citibank-facebook-bot

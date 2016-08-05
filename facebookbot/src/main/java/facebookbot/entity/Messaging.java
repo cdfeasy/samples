@@ -9,6 +9,7 @@ public class Messaging {
     private Recipient recipient;
     private Long timestamp;
     private Message message;
+    private Postback postback;
     private Read read;
 
     /**
@@ -81,6 +82,14 @@ public class Messaging {
         this.read = read;
     }
 
+    public Postback getPostback() {
+        return postback;
+    }
+
+    public void setPostback(Postback postback) {
+        this.postback = postback;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Messaging{");
@@ -88,6 +97,7 @@ public class Messaging {
         sb.append(", recipient=").append(recipient);
         sb.append(", timestamp=").append(timestamp);
         sb.append(", message=").append(message);
+        sb.append(", postback=").append(postback);
         sb.append(", read=").append(read);
         sb.append('}');
         return sb.toString();
