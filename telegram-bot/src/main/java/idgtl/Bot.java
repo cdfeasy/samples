@@ -39,8 +39,9 @@ public class Bot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
+        update.getMessage().getChatId()
     //    System.out.println(message.getText());
-        if(!(new Date().getTime()/1000-message.getDate()<10)){
+        if(message==null || message.getDate()==null ||!(new Date().getTime()/1000-message.getDate()<10)){
             return;
         }
         if(message != null && message.hasText()&& message.getText().startsWith("/percent=")){
@@ -55,7 +56,14 @@ public class Bot extends TelegramLongPollingBot {
 
             }
         }
-        if (message != null && message.hasText() && message.getText().split(" ").length<=2&& random.nextInt(100)<percent.get()) {
+//        if (message != null && message.hasText()) {
+//            switch (random.nextInt(5)){
+//                case 1: sendMsg(message, message.getText()+" у тебя в штанах"); break;
+//                case 2: sendMsg(message, "В штанах твоих "+message.getText());break;
+//                default: sendMsg(message, "В штанах у тебя "+message.getText()); break;
+//            }
+//        }
+        if (message != null && message.hasText() && message.getText().split(" ").length<=2&&!message.getText().contains("http")&& random.nextInt(100)<percent.get()) {
             switch (random.nextInt(5)){
                 case 1: sendMsg(message, message.getText()+" у тебя в штанах"); break;
                 case 2: sendMsg(message, "В штанах твоих "+message.getText());break;
