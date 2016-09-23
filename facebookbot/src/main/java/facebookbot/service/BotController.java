@@ -1,15 +1,13 @@
 package facebookbot.service;
 
-import facebookbot.entity.Entry;
-import facebookbot.entity.MessageResp;
-import facebookbot.entity.Messaging;
+import facebookbot.entity.resp.Entry;
+import facebookbot.entity.resp.MessageResp;
+import facebookbot.entity.resp.Messaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**

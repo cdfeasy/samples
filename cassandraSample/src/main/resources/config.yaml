@@ -1,0 +1,5 @@
+cassandra:
+  host: test-b2b-dev-02.g01.i-free.ru
+  keyspace: test1
+server:
+  port: 8080
