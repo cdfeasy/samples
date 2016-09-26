@@ -1,20 +1,17 @@
 package facebookbot.service;
 
-import facebookbot.entity.MessageResp;
-import facebookbot.entity.Messaging;
+import facebookbot.entity.resp.Messaging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
@@ -91,7 +88,7 @@ public class BotProcessor {
                 session.setIsApproved(true);
                 logger.info("[{}] auth completed",message.getSender().getId());
                 sendSimpleMsg(message, "Поздравляем!");
-                sendSimpleMsg(message, helpMessage);
+                sendHelpMessage(message);
                 return true;
             } else {
                 logger.info("[{}] incorrect code",message.getSender().getId());
@@ -176,10 +173,19 @@ public class BotProcessor {
         }
         return false;
     }
+
+    private void sendHelpMessage(Messaging message){
+        Map<String,String> map=new LinkedHashMap<>();
+        map.put(newsRus,newsShort);
+        map.put(balanceRus,balanceShort);
+        map.put(helpRus,helpShort);
+        map.put(exitRus,exitShort);
+        sender.sendMenu("Список доступных команд:",message.getSender().getId(), map);
+    }
     public boolean processHelp(Messaging message, Session session) {
         if (helpShort.equals(message.getMessage().getText())||help.equals(message.getMessage().getText())||helpRus.equals(message.getMessage().getText())){
             session.setView(Session.View.HELP);
-            sendSimpleMsg(message, helpMessage);
+            sendHelpMessage(message);
             return true;
         }
         return false;
