@@ -112,6 +112,7 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
             }
             consumer = new KafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList(configBuilder.getTopic()));
+
            // getClass(this.getClass());
          //   Type type = this.getClass().getTypeParameters()[0].getBounds()[0];
 //            Class<K> key = (Class<K>) ((ParameterizedType) configBuilder.getClass()
@@ -123,8 +124,13 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     }
 
     @Override
-    public void send(V object) {
-        send.add(new KafkaEntry<K,V>(object, null));
+    public void send(V object) throws Exception {
+        NoSendCallback callback=new NoSendCallback();
+        send.add(new KafkaEntry<K,V>(object, callback));
+        Exception ex=callback.get();
+        if(ex!=null) {
+            throw ex;
+        }
     }
 
     @Override

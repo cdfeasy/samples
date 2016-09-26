@@ -107,7 +107,9 @@ public class KafkaReceiveProcessor<K,V> implements Runnable {
         lock.readLock().lock();
         try {
             int cnt=0;
+
             for (TopicPartition partition : records.keySet()) {
+
                 ConsumerRecord<byte[], byte[]> rec = records.get(partition).poll();
                 if (rec != null) {
                     try {

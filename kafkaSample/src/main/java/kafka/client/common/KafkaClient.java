@@ -13,7 +13,7 @@ public interface KafkaClient<K, V> extends AutoCloseable  {
         Producer,
         All
     }
-    void send(V object);
+    void send(V object) throws Exception;
     void send(List<V> objects) throws Exception;
     void send(V object, Callback callback);
     void send(K key, V object, Callback callback);

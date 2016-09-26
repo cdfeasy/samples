@@ -36,7 +36,7 @@ public class ClientTest {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
         Producer<String, String> producer = new KafkaProducer<>(props);
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1000000; i++) {
             producer.send(new ProducerRecord<String, String>(
                     "test3",
                     String.format("{\"type\":\"test\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)), new Callback() {
@@ -56,7 +56,7 @@ public class ClientTest {
     public void test1() throws InterruptedException {
         Properties props = new Properties();
         props.put("bootstrap.servers", "test-b2b-dev-02.g01.i-free.ru:9092");
-        props.put("group.id", "test41");
+        props.put("group.id", "test100");
         props.put("enable.auto.commit", "false");
         props.put("auto.commit.interval.ms", "1000");
         props.put("session.timeout.ms", "30000");
@@ -69,30 +69,32 @@ public class ClientTest {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
 
-        consumer.subscribe(Arrays.asList("test3"));
-        //  System.out.println(consumer.partitionsFor("test3"));
-        int cnt = 0;
-        label:
-        for (int i = 0; i < 10; i++) {
-            ConsumerRecords<String, String> records = consumer.poll(3000);
+        consumer.subscribe(Arrays.asList("__consumer_offsets"));
+     //   System.out.println(consumer.);
 
-
-            for (TopicPartition partition : records.partitions()) {
-                List<ConsumerRecord<String, String>> partitionRecords = records.records(partition);
-                long lastOffset = 0;
-                for (ConsumerRecord<String, String> record : partitionRecords) {
-                    System.out.printf("%d offset = %d, key = %s, value = %s\n",i, record.offset(), record.key(), record.value());
-                    cnt++;
-                    lastOffset = record.offset();
-                    if (cnt > 100) {
-                        consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
-                        cnt=0;
-                        continue label;
-                    }
-                }
-                consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
-            }
-        }
+//          System.out.println(consumer.partitionsFor("test3"));
+//        int cnt = 0;
+//        label:
+//        for (int i = 0; i < 10; i++) {
+//            ConsumerRecords<String, String> records = consumer.poll(3000);
+//
+//
+//            for (TopicPartition partition : records.partitions()) {
+//                List<ConsumerRecord<String, String>> partitionRecords = records.records(partition);
+//                long lastOffset = 0;
+//                for (ConsumerRecord<String, String> record : partitionRecords) {
+//                    System.out.printf("%d offset = %d, key = %s, value = %s\n",i, record.offset(), record.key(), record.value());
+//                    cnt++;
+//                    lastOffset = record.offset();
+//                    if (cnt > 100) {
+//                        consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
+//                        cnt=0;
+//                        continue label;
+//                    }
+//                }
+//                consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
+//            }
+//        }
 
 
         // consumer.seekToBeginning(new TopicPartition("test1",0));
