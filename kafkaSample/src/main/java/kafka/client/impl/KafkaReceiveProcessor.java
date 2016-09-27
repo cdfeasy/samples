@@ -48,7 +48,7 @@ public class KafkaReceiveProcessor<K,V> implements Runnable {
         this.isRunning=isRunning;
     }
 
-    private void commit() {
+    public void commit() {
         if ( commitMap.isEmpty()) {
             return;
         }
@@ -89,7 +89,6 @@ public class KafkaReceiveProcessor<K,V> implements Runnable {
         }finally {
             lock.writeLock().unlock();
         }
-        Thread.sleep(100);
     }
 
     public KafkaEntry<K,V> receive(){
@@ -107,9 +106,7 @@ public class KafkaReceiveProcessor<K,V> implements Runnable {
         lock.readLock().lock();
         try {
             int cnt=0;
-
             for (TopicPartition partition : records.keySet()) {
-
                 ConsumerRecord<byte[], byte[]> rec = records.get(partition).poll();
                 if (rec != null) {
                     try {

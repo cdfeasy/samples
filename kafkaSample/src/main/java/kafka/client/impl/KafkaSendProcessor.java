@@ -15,25 +15,21 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by d.asadullin on 03.03.2016.
  */
-public class KafkaSendProcessor<K, V> implements Runnable {
+public class KafkaSendProcessor implements Runnable {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private KafkaProducer<byte[], byte[]> producer;
-    private LinkedBlockingQueue<KafkaEntry<K, V>> send;
-    private Serializer keySerializer;
-    private Serializer valueSerializer;
+    private LinkedBlockingQueue<KafkaEntry<byte[], byte[]>> send;
     private String defaultTopic;
 
-    public KafkaSendProcessor(KafkaProducer<byte[], byte[]> producer, LinkedBlockingQueue<KafkaEntry<K, V>> send, KafkaConfigBuilder configBuilder) {
+    public KafkaSendProcessor(KafkaProducer<byte[], byte[]> producer, LinkedBlockingQueue<KafkaEntry<byte[], byte[]>> send, KafkaConfigBuilder configBuilder) {
         this.producer = producer;
         this.send = send;
-        this.keySerializer = configBuilder.getKeySerializer();
-        this.valueSerializer = configBuilder.getValueSerializer();
         this.defaultTopic = configBuilder.getTopic();
     }
 
     @Override
     public void run() {
-        KafkaEntry<K, V> entry;
+        KafkaEntry<byte[], byte[]> entry;
         int i = 0;
         while (true) {
             try {
@@ -41,12 +37,7 @@ public class KafkaSendProcessor<K, V> implements Runnable {
                 i++;
                 try {
                     String topic = entry.getTopic() != null ? entry.getTopic() : defaultTopic;
-                    byte[] value = valueSerializer.serialize(topic, entry.getObject());
-                    byte[] key = null;
-                    if (entry.getKey() != null) {
-                        key = keySerializer.serialize(topic, entry.getKey());
-                    }
-                    producer.send(new ProducerRecord<byte[], byte[]>(topic, key, value), entry.getCallback());
+                    producer.send(new ProducerRecord<byte[], byte[]>(topic, entry.getKey(), entry.getObject()), entry.getCallback());
                 } catch (Exception ex) {
                     logger.error(String.format("Cannot send message %s", entry.getObject().toString()), ex);
                     entry.getCallback().onCompletion(null, ex);

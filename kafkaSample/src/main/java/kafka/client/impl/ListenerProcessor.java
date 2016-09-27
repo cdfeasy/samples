@@ -1,9 +1,6 @@
 package kafka.client.impl;
 
-import kafka.client.common.KafkaBatchListener;
-import kafka.client.common.KafkaClient;
-import kafka.client.common.KafkaEntry;
-import kafka.client.common.KafkaListener;
+import kafka.client.common.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +13,9 @@ public class ListenerProcessor<K,V> implements Runnable {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
     private List<KafkaListener<K,V>> listeners;
     private List<KafkaBatchListener<K,V>> batchListeners;
-    private KafkaClient<K,V> client;
+    private KafkaConsumerClient<K,V> client;
 
-    public ListenerProcessor(List<KafkaListener<K,V>> listeners, List<KafkaBatchListener<K,V>> batchListeners, KafkaClient client) {
+    public ListenerProcessor(List<KafkaListener<K,V>> listeners, List<KafkaBatchListener<K,V>> batchListeners, KafkaConsumerClient client) {
         this.listeners = listeners;
         this.batchListeners = batchListeners;
         this.client = client;
