@@ -6,7 +6,6 @@ import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,26 +15,19 @@ import java.util.concurrent.Executors;
 public class Server {
     ZooKeeperServerMain zooKeeperServer;
     Thread thread;
-    ExecutorService service= Executors.newFixedThreadPool(1);
-    public void start(){
-        Properties properties=new Properties();
-        /*
-        tickTime=2000
-initLimit=10
-syncLimit=5
-dataDir=/tmp/zookeeper
+    ExecutorService service = Executors.newFixedThreadPool(1);
 
-clientPort=2181
-         */
-        properties.put("tickTime","2000");
-        properties.put("initLimit","10");
-        properties.put("syncLimit","5");
-        properties.put("dataDir","zoo");
-        properties.put("clientPort","2181");
+    public void start() {
+        Properties properties = new Properties();
+        properties.put("tickTime", "2000");
+        properties.put("initLimit", "10");
+        properties.put("syncLimit", "5");
+        properties.put("dataDir", "zoo");
+        properties.put("clientPort", "2181");
         QuorumPeerConfig quorumConfiguration = new QuorumPeerConfig();
         try {
             quorumConfiguration.parseProperties(properties);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -43,7 +35,7 @@ clientPort=2181
         final ServerConfig configuration = new ServerConfig();
         configuration.readFrom(quorumConfiguration);
 
-        Runnable task=new Runnable() {
+        Runnable task = new Runnable() {
             public void run() {
                 try {
                     zooKeeperServer.runFromConfig(configuration);
@@ -53,29 +45,23 @@ clientPort=2181
         };
         service.submit(task);
     }
-    public void stop(){
+
+    public void stop() {
         service.shutdown();
     }
 
-    public static void main(String[] args){
-        Properties properties=new Properties();
-        /*
-        tickTime=2000
-initLimit=10
-syncLimit=5
-dataDir=/tmp/zookeeper
+    public static void main(String[] args) {
+        Properties properties = new Properties();
 
-clientPort=2181
-         */
-        properties.put("tickTime","2000");
-        properties.put("initLimit","10");
-        properties.put("syncLimit","5");
-        properties.put("dataDir","zoo");
-        properties.put("clientPort","2181");
+        properties.put("tickTime", "2000");
+        properties.put("initLimit", "10");
+        properties.put("syncLimit", "5");
+        properties.put("dataDir", "zoo");
+        properties.put("clientPort", "2181");
         QuorumPeerConfig quorumConfiguration = new QuorumPeerConfig();
         try {
             quorumConfiguration.parseProperties(properties);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

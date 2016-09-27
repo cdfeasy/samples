@@ -5,6 +5,7 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -46,14 +47,18 @@ public class ZooClientImpl implements ZooClient {
 
     @Override
     public void start() throws Exception {
-        client.start();
-        processor.start();
+        if(!CuratorFrameworkState.STARTED.equals(client.getState())) {
+            client.start();
+            processor.start();
+        }
     }
 
     @Override
     public void stop() throws IOException {
-        processor.stop();
-        client.close();
+        if(CuratorFrameworkState.STARTED.equals(client.getState())) {
+            processor.stop();
+            client.close();
+        }
     }
 
     @Override

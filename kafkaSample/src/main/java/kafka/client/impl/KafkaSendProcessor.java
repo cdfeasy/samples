@@ -8,6 +8,8 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -47,14 +49,7 @@ public class KafkaSendProcessor<K, V> implements Runnable {
                     producer.send(new ProducerRecord<byte[], byte[]>(topic, key, value), entry.getCallback());
                 } catch (Exception ex) {
                     logger.error(String.format("Cannot send message %s", entry.getObject().toString()), ex);
-                    if (entry.getCallback() != null) {
-                        try {
-                            entry.getCallback().onCompletion(null, ex);
-                        } catch (Exception nope) {
-                            //nope
-                        }
-
-                    }
+                    entry.getCallback().onCompletion(null, ex);
                 }
                 if (i >= 100) {
                     producer.flush();

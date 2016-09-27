@@ -5,6 +5,8 @@ import kafka.client.serializer.BasicSerializer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
  * Created by d.asadullin on 02.03.2016.
  */
 public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private KafkaProducer<byte[], byte[]> producer;
     private KafkaConsumer<byte[], byte[]> consumer;
     private LinkedBlockingQueue<KafkaEntry<K,V>> send;
@@ -32,7 +35,7 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     private AtomicBoolean isRunning = new AtomicBoolean(false);
     private KafkaReceiveProcessor<K,V> receiveProcessor;
     private KafkaSendProcessor<K,V> sendProcessor;
-   // private KafkaListener<byte[]> exceptionListener;
+    private ExecutorService onMessageExecutor;
 
     private static Class<?> getClass(Class type)
     {
@@ -67,6 +70,7 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
         if(configBuilder.getProperties()!=null) {
             props.putAll(configBuilder.getProperties());
         }
+        onMessageExecutor=Executors.newFixedThreadPool(2);
         if (Mode.Producer.equals(configBuilder.getMode()) || Mode.All.equals(configBuilder.getMode())) {
             props.put("bootstrap.servers", configBuilder.getServers());
             props.put("acks", "all");
@@ -112,13 +116,6 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
             }
             consumer = new KafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList(configBuilder.getTopic()));
-
-           // getClass(this.getClass());
-         //   Type type = this.getClass().getTypeParameters()[0].getBounds()[0];
-//            Class<K> key = (Class<K>) ((ParameterizedType) configBuilder.getClass()
-//                    .getGenericSuperclass()).getActualTypeArguments()[0];
-//            Class<V> value = (Class<V>) (Class<V>) ((ParameterizedType) configBuilder.getClass()
-//                    .getGenericSuperclass()).getActualTypeArguments()[1];
             receiveProcessor = new KafkaReceiveProcessor<>(isRunning, consumer, configBuilder);
         }
     }
@@ -126,7 +123,7 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     @Override
     public void send(V object) throws Exception {
         NoSendCallback callback=new NoSendCallback();
-        send.add(new KafkaEntry<K,V>(object, callback));
+        send.add(new KafkaEntry<K,V>(object, new ListenerWrapper(callback,onMessageExecutor,logger)));
         Exception ex=callback.get();
         if(ex!=null) {
             throw ex;
@@ -137,15 +134,15 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     public void send(List<V> objects) throws Exception {
         send.addAll(objects.stream().map((a) -> new KafkaEntry<K,V>(a, null)).collect(Collectors.toList()));
     }
-
+    //TODO create cache of listeners
     @Override
     public void send(V object, Callback callback) {
-        send.add(new KafkaEntry<K,V>(object, callback));
+        send.add(new KafkaEntry<K,V>(object,  new ListenerWrapper(callback,onMessageExecutor,logger)));
     }
 
     @Override
     public void send(K key, V object, Callback callback) {
-        send.add(new KafkaEntry<K,V>(key, object, callback));
+        send.add(new KafkaEntry<K,V>(key, object, new ListenerWrapper(callback,onMessageExecutor,logger)));
     }
 
     @Override
@@ -208,7 +205,7 @@ public class KafkaClientImpl<K, V> implements KafkaClient<K,V> {
     @Override
     public void start() throws Exception {
         isRunning.set(true);
-        executorService.scheduleWithFixedDelay(sendProcessor, 10, 100, TimeUnit.MILLISECONDS);
+        executorService.submit(sendProcessor);
         executorService.scheduleWithFixedDelay(receiveProcessor, 10, 100, TimeUnit.MILLISECONDS);
         executorService.scheduleWithFixedDelay(new ListenerProcessor<>(listeners, batchListeners, this), 10, 100, TimeUnit.MILLISECONDS);
     }
