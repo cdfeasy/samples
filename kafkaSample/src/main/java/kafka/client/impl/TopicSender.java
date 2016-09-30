@@ -1,11 +1,12 @@
 package kafka.client.impl;
 
+import kafka.client.Serializer;
 import kafka.client.common.KafkaEntry;
 import kafka.client.common.KafkaProducerClient;
 import kafka.client.impl.callback.EmptyCallback;
+import kafka.client.impl.callback.ListenerWrapper;
 import kafka.client.impl.callback.NoSendCallback;
 import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public class TopicSender<K, V> implements KafkaProducerClient<K, V> {
     @Override
     public void send(V object) throws Exception {
         NoSendCallback callback = new NoSendCallback();
-        byte[] obj = valueSerializer.serialize(topic, object);
+        byte[] obj = valueSerializer.serialize(object);
         send.add(new KafkaEntry<byte[], byte[]>(obj, new ListenerWrapper(callback, onMessageExecutor, logger)));
         Exception ex = callback.get();
         if (ex != null) {
@@ -68,29 +69,29 @@ public class TopicSender<K, V> implements KafkaProducerClient<K, V> {
 
     @Override
     public void send(List<V> objects) throws Exception {
-        send.addAll(objects.stream().map((a) -> valueSerializer.serialize(topic, a)).map((a) -> new KafkaEntry<byte[], byte[]>(a, new EmptyCallback())).collect(Collectors.toList()));
+        send.addAll(objects.stream().map((a) -> valueSerializer.serialize( a)).map((a) -> new KafkaEntry<byte[], byte[]>(a, new EmptyCallback())).collect(Collectors.toList()));
     }
 
     //TODO create cache of listeners
     @Override
     public void send(V object, Callback callback) {
-        byte[] obj = valueSerializer.serialize(topic, object);
+        byte[] obj = valueSerializer.serialize( object);
         send.add(new KafkaEntry<byte[], byte[]>(obj, new ListenerWrapper(callback, onMessageExecutor, logger)));
     }
 
     @Override
     public void send(K key, V object, Callback callback) {
-        byte[] k = keySerializer.serialize(topic, key);
-        byte[] obj = valueSerializer.serialize(topic, object);
+        byte[] k = keySerializer.serialize( key);
+        byte[] obj = valueSerializer.serialize( object);
         send.add(new KafkaEntry<byte[], byte[]>(k, obj, new ListenerWrapper(callback, onMessageExecutor, logger)));
     }
 
     @Override
     public void sendBatch(List<KafkaEntry<K, V>> objects) {
         for (KafkaEntry<K, V> entry : objects) {
-            byte[] obj = valueSerializer.serialize(topic, entry.getObject());
+            byte[] obj = valueSerializer.serialize( entry.getObject());
             if (entry.getKey() != null) {
-                byte[] k = keySerializer.serialize(topic, entry.getKey());
+                byte[] k = keySerializer.serialize( entry.getKey());
                 send.add(new KafkaEntry<>(k, obj, new ListenerWrapper(entry.getCallback(), onMessageExecutor, logger)));
             } else {
                 send.add(new KafkaEntry<>(obj, new ListenerWrapper(entry.getCallback(), onMessageExecutor, logger))) ;

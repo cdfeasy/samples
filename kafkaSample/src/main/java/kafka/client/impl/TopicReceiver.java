@@ -3,7 +3,6 @@ package kafka.client.impl;
 import kafka.client.common.*;
 import kafka.client.serializer.BasicSerializer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +14,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * Created by d.asadullin on 27.09.2016.
  */
 public class TopicReceiver<K, V> implements KafkaConsumerClient<K, V> {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private KafkaClientImpl client;
+    private KafkaServiceImpl client;
     private KafkaConsumer<byte[], byte[]> consumer;
     private KafkaReceiveProcessor<K, V> receiveProcessor;
     private List<KafkaListener<K, V>> listeners=new ArrayList<>();
@@ -48,7 +46,7 @@ public class TopicReceiver<K, V> implements KafkaConsumerClient<K, V> {
         return null;
     }
 
-    public TopicReceiver(ScheduledExecutorService executorService,KafkaConfigBuilder<K, V> configBuilder, KafkaClientImpl client, AtomicBoolean isRunning) {
+    public TopicReceiver(ScheduledExecutorService executorService,KafkaConfigBuilder<K, V> configBuilder, KafkaServiceImpl client, AtomicBoolean isRunning) {
         this.client = client;
         this.isRunning = isRunning;
         this.executorService=executorService;

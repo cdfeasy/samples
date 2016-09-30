@@ -37,7 +37,7 @@ public class KafkaSendProcessor implements Runnable {
                 i++;
                 try {
                     String topic = entry.getTopic() != null ? entry.getTopic() : defaultTopic;
-                    producer.send(new ProducerRecord<byte[], byte[]>(topic, entry.getKey(), entry.getObject()), entry.getCallback());
+                    producer.send(new ProducerRecord<>(topic, entry.getKey(), entry.getObject()), entry.getCallback());
                 } catch (Exception ex) {
                     logger.error(String.format("Cannot send message %s", entry.getObject().toString()), ex);
                     entry.getCallback().onCompletion(null, ex);

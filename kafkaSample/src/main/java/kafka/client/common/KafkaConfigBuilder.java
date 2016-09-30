@@ -1,10 +1,8 @@
 package kafka.client.common;
 
-import kafka.client.impl.KafkaClientImpl;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 /**
@@ -24,7 +22,7 @@ public class KafkaConfigBuilder<K, V> {
     private Deserializer valueDeserializer;
     private Properties properties;
     private String topic;
-    private KafkaClient.Mode mode;
+    private KafkaService.Mode mode;
 
     public KafkaConfigBuilder setServers(String servers) {
         this.servers = servers;
@@ -86,13 +84,13 @@ public class KafkaConfigBuilder<K, V> {
         return this;
     }
 
-    public KafkaConfigBuilder setMode(KafkaClient.Mode mode) {
+    public KafkaConfigBuilder setMode(KafkaService.Mode mode) {
         this.mode = mode;
         return this;
     }
-    public KafkaClient<K, V> build(){
-        return new KafkaClientImpl<K,V>(this);
-    }
+//    public KafkaClient<K, V> build(){
+//        return new KafkaClientImpl<K,V>(this);
+//    }
 
     public String getServers() {
         return servers;
@@ -143,7 +141,7 @@ public class KafkaConfigBuilder<K, V> {
         return topic;
     }
 
-    public KafkaClient.Mode getMode() {
+    public KafkaService.Mode getMode() {
         return mode;
     }
 

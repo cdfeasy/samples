@@ -1,21 +1,10 @@
 package kafka.client;
 
-import kafka.client.common.KafkaClient;
-import kafka.client.common.KafkaConfigBuilder;
-import kafka.client.common.KafkaEntry;
-import kafka.client.impl.KafkaClientImpl;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.*;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -154,23 +143,23 @@ public class ClientTest {
     @Test
     public void test4() throws Exception {
         int cnt=0;
-        while (true) {
-            KafkaConfigBuilder<String,String> kafkaConfigBuilder = new KafkaConfigBuilder<>().setServers("test-b2b-dev-02.g01.i-free.ru:9092").
-                    setTopic("test3").setGroupId("test74").setBatchSize(300).setMode(KafkaClient.Mode.All);
-           // kafkaConfigBuilder.setValueDeserializer(new ByteArrayDeserializer());
-            KafkaClient<String,String> kafkaClient = new KafkaClientImpl<>(kafkaConfigBuilder);
-            kafkaClient.start();
-            for (int i = 0; i < 1000; i++) {
-                for (KafkaEntry<String,String> s : kafkaClient.receiveEntries(100)) {
-                    System.out.println(s.getKey()+"/"+s.getObject());
-                    cnt++;
-                }
-                Thread.sleep(100);
-            }
-
-            kafkaClient.close();
-            System.out.println("cnt=" + cnt);
-        }
+//        while (true) {
+//            KafkaConfigBuilder<String,String> kafkaConfigBuilder = new KafkaConfigBuilder<>().setServers("test-b2b-dev-02.g01.i-free.ru:9092").
+//                    setTopic("test3").setGroupId("test74").setBatchSize(300).setMode(KafkaClient.Mode.All);
+//           // kafkaConfigBuilder.setValueDeserializer(new ByteArrayDeserializer());
+//            KafkaClient<String,String> kafkaClient = new KafkaClientImpl<>(kafkaConfigBuilder);
+//            kafkaClient.start();
+//            for (int i = 0; i < 1000; i++) {
+//                for (KafkaEntry<String,String> s : kafkaClient.receiveEntries(100)) {
+//                    System.out.println(s.getKey()+"/"+s.getObject());
+//                    cnt++;
+//                }
+//                Thread.sleep(100);
+//            }
+//
+//            kafkaClient.close();
+//            System.out.println("cnt=" + cnt);
+//        }
 
 
         // consumer.seekToBeginning(new TopicPartition("test1",0));
