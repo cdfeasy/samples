@@ -24,7 +24,6 @@ public class TopicReceiver<K, V> implements KafkaConsumerClient<K, V> {
     private KafkaConsumer<byte[], byte[]> consumer;
     private KafkaReceiveProcessor<K, V> receiveProcessor;
     private List<KafkaListener<K, V>> listeners=new ArrayList<>();
-    private List<KafkaBatchListener<K, V>> batchListeners=new ArrayList<>();
     private AtomicBoolean isRunning;
     private ScheduledExecutorService executorService;
     private ScheduledFuture<?> scheduledFuture;
@@ -118,32 +117,22 @@ public class TopicReceiver<K, V> implements KafkaConsumerClient<K, V> {
 //    }
 
     @Override
-    public void addListener(KafkaBatchListener<K, V> listener) {
-        batchListeners.add(listener);
-    }
-
-    @Override
     public void removeListener(KafkaListener<K, V> listener) {
         listeners.remove(listener);
     }
 
-    @Override
-    public void removeListener(KafkaBatchListener<K, V> listener) {
-        batchListeners.remove(listener);
-    }
 
     @Override
     public void start() throws Exception {
         isRunning.set(true);
         scheduledFuture= executorService.scheduleWithFixedDelay(receiveProcessor, 10, 100, TimeUnit.MILLISECONDS);
-        executorService.scheduleWithFixedDelay(new ListenerProcessor<>(listeners, batchListeners, this), 10, 100, TimeUnit.MILLISECONDS);
+        executorService.scheduleWithFixedDelay(new ListenerProcessor<>(listeners, this), 10, 100, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void close() throws Exception {
         try {
             listeners.clear();
-            batchListeners.clear();
             scheduledFuture.cancel(false);
             receiveProcessor.commit();
         } finally {
