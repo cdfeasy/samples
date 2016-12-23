@@ -1,23 +1,17 @@
 package kafka.client.impl;
 
-import kafka.client.Serializer;
 import kafka.client.common.*;
-import kafka.client.impl.callback.NoSendCallback;
 import kafka.client.serializer.BasicSerializer;
-import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Created by d.asadullin on 02.03.2016.
@@ -31,7 +25,7 @@ public class KafkaServiceImpl implements KafkaService {
     private KafkaSendProcessor sendProcessor;
     private ExecutorService onMessageExecutor;
     private KafkaConfigBuilder configBuilder;
-    private ConcurrentHashMap<String, TopicReceiver> topicMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, KafkaConsumerClient> topicMap = new ConcurrentHashMap<>();
 
     private static Class<?> getClass(Class type) {
         Type[] genericInterfaces = type.getGenericInterfaces();
@@ -95,18 +89,20 @@ public class KafkaServiceImpl implements KafkaService {
         return isRunning;
     }
 
-    public void registerTopicClient(KafkaClient client){
-
+    public synchronized boolean registerTopicClient(KafkaClient client){
+       if(!topicMap.contains(client.getTopic())){
+          topicMap.put(client.getTopic(), (TopicReceiver) client);
+           return true;
+       }
+       return false;
     }
-
-
 
     public void start() throws Exception {
         isRunning.set(true);
         executorService.submit(sendProcessor);
     }
 
-    public void close() throws Exception {
+    public void stop() throws Exception {
         try {
             isRunning.set(false);
             executorService.shutdown();
@@ -121,13 +117,8 @@ public class KafkaServiceImpl implements KafkaService {
         }
     }
 
-    @Override
-    public <K, V> ClientBuilder<K, V> getBuilder(String topic, Class<K> keyClazz, Class<V> valueClazz) throws Exception {
-        return ClientBuilder.getBuilder(topic,keyClazz,valueClazz,configBuilder,this);
-    }
 
-    @Override
-    public ClientBuilder<byte[], byte[]> getBuilder(String topic) throws Exception {
-        return ClientBuilder.getBuilder(topic,configBuilder,this);
+    public <K, V> KafkaClient<K,V> getClient(KafkaClient.ClientConfig<K,V>  builder) throws Exception {
+        return builder.build(this,configBuilder);
     }
 }

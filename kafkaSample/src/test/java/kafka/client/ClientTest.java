@@ -2,8 +2,11 @@ package kafka.client;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.*;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -12,10 +15,26 @@ import java.util.concurrent.ExecutionException;
  * Created by d.asadullin on 26.02.2016.
  */
 public class ClientTest {
+
+    EmbeddedServer embeddedServer;
+    @Before
+    public void before() throws IOException, InterruptedException {
+        Properties kafkaProperties=new Properties();
+        kafkaProperties.load(Class.class.getResourceAsStream("/kafkalocal.properties"));
+        Properties zkProperties=new Properties();
+        zkProperties.load(Class.class.getResourceAsStream("/zklocal.properties"));;
+        embeddedServer=new EmbeddedServer(kafkaProperties,zkProperties);
+    }
+
+    @After
+    public void after(){
+        embeddedServer.stop();
+    }
+
     @Test
     public void test() throws InterruptedException, ExecutionException {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "test-b2b-dev-02.g01.i-free.ru:9092");
+        props.put("bootstrap.servers", "localhost:9092");
         props.put("acks", "all");
         props.put("retries", 0);
         props.put("batch.size", 16384);
@@ -25,7 +44,7 @@ public class ClientTest {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
         Producer<String, String> producer = new KafkaProducer<>(props);
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 10000; i++) {
             producer.send(new ProducerRecord<String, String>(
                     "test3",
                     String.format("{\"type\":\"test\", \"t\":%.3f, \"k\":%d}", System.nanoTime() * 1e-9, i)), new Callback() {

@@ -88,9 +88,6 @@ public class KafkaConfigBuilder<K, V> {
         this.mode = mode;
         return this;
     }
-//    public KafkaClient<K, V> build(){
-//        return new KafkaClientImpl<K,V>(this);
-//    }
 
     public String getServers() {
         return servers;

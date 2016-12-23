@@ -13,9 +13,9 @@ public interface KafkaConsumerClient<K, V>  extends AutoCloseable {
     List<V> receive(int count) throws Exception ;
     List<KafkaEntry<K, V>> receiveEntries(int count)throws Exception ;
     void addListener(KafkaListener<K, V> listener);
-    void addListener(KafkaBatchListener<K, V> listener);
     void removeListener(KafkaListener<K, V> listener);
-    void removeListener(KafkaBatchListener<K, V> listener);
     void start() throws Exception;
     void close() throws Exception;
+
+
 }
